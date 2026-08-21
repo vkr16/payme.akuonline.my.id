@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('receipt_image', file);
 
         try {
-            const response = await fetch("{{ route('bills.parse-receipt') }}", {
+            const response = await fetch("{{ route('bills.parse-receipt', [], false) }}", {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
