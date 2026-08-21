@@ -35,6 +35,14 @@
                     </div>
                 </div>
 
+                @php
+                    $shareUrl = route('bills.show', ['slug' => $bill->slug]);
+                    if (str_contains($shareUrl, ':///') || !str_contains($shareUrl, '://')) {
+                        $baseUrl = rtrim(config('app.url', 'https://payme.akuonline.my.id'), '/');
+                        $shareUrl = $baseUrl . '/b/' . $bill->slug;
+                    }
+                @endphp
+
                 <!-- Share Link & Receipt Action Box -->
                 <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mb-2">
                     @if($bill->receipt_image_path)
@@ -45,7 +53,7 @@
                     <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnCopyShareLink">
                         <i class="fa-solid fa-link me-1"></i> Salin Link Patungan
                     </button>
-                    <a href="https://api.whatsapp.com/send?text={{ urlencode('Yuk bayar patungan ' . $bill->title . ' ditalangin ' . $bill->host_name . ' lewat link ini: ' . request()->fullUrl()) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+                    <a href="https://api.whatsapp.com/send?text={{ urlencode('Yuk bayar patungan ' . $bill->title . ' ditalangin ' . $bill->host_name . ' lewat link ini: ' . $shareUrl) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
                         <i class="fa-brands fa-whatsapp me-1"></i> Bagikan WA
                     </a>
                 </div>
@@ -373,7 +381,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnCopyShareLink = document.getElementById('btnCopyShareLink');
     if (btnCopyShareLink) {
         btnCopyShareLink.addEventListener('click', function() {
-            navigator.clipboard.writeText(window.location.href);
+            let shareUrl = "{{ $shareUrl }}";
+            if (!shareUrl || shareUrl.includes(':///')) {
+                shareUrl = window.location.href;
+            }
+            navigator.clipboard.writeText(shareUrl);
             alert('Link patungan berhasil disalin ke clipboard!');
         });
     }
