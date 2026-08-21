@@ -1,0 +1,37 @@
+services:
+  php-fpm:
+    build:
+      context: ./docker/php
+    container_name: payme-php-fpm
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - payme
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: payme-nginx
+    ports:
+      - "8181:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-fpm
+    networks:
+      - payme
+
+  node:
+    image: node:22-alpine
+    container_name: payme-node
+    profiles: ["tools"]
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - payme
+
+networks:
+  payme:
+    driver: bridge
+    name: payme-network
