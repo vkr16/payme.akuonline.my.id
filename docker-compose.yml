@@ -6,7 +6,7 @@ services:
     volumes:
       - ./src:/var/www/html
     networks:
-      - payme
+      - private-net
 
   nginx:
     image: nginx:stable-alpine
@@ -19,7 +19,7 @@ services:
     depends_on:
       - php-fpm
     networks:
-      - payme
+      - private-net
 
   node:
     image: node:22-alpine
@@ -29,9 +29,8 @@ services:
     volumes:
       - ./src:/var/www/html
     networks:
-      - payme
-
+      - private-net
+      
 networks:
-  payme:
-    driver: bridge
-    name: payme-network
+  private-net:
+    external: true
