@@ -55,6 +55,11 @@ class Bill extends Model
         return $this->hasMany(BillClaim::class);
     }
 
+    public function banks(): HasMany
+    {
+        return $this->hasMany(BillBank::class);
+    }
+
     public function getSubtotalAttribute(): float
     {
         return (float) $this->items->sum(fn ($item) => $item->qty * $item->price);

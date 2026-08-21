@@ -89,10 +89,22 @@
                     <h5 class="mb-0 fw-bold text-primary fs-6">
                         <i class="fa-solid fa-receipt me-2"></i> Rincian Struk Pesanan
                     </h5>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <!-- User Defined Price Format Dropdown -->
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <span class="input-group-text bg-light text-primary border-primary">
+                                <i class="fa-solid fa-sliders"></i>
+                            </span>
+                            <select id="receiptPriceTypeSelect" class="form-select form-select-sm border-primary fw-semibold" title="Format Harga pada Struk">
+                                <option value="auto" selected>🤖 Auto-Detect (Otomatis)</option>
+                                <option value="unit_price">🏷️ Nominal Struk = Harga Satuan per 1 Pcs</option>
+                                <option value="total_price">🧮 Nominal Struk = Harga Total Kuantitas (Line Total)</option>
+                            </select>
+                        </div>
+
                         <label for="receiptFileInput" class="btn btn-sm btn-outline-primary mb-0 cursor-pointer">
-                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Pindai Struk via AI
-                            <input type="file" name="receipt_image" id="receiptFileInput" class="d-none" accept="image/*">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Pindai Struk via AI (Bisa Multi Foto)
+                            <input type="file" name="receipt_images[]" id="receiptFileInput" class="d-none" accept="image/*" multiple>
                         </label>
                         <button type="button" class="btn btn-sm btn-outline-secondary" id="btnAddManualItem">
                             <i class="fa-solid fa-plus me-1"></i> Tambah Item Manual
@@ -104,7 +116,7 @@
                     <!-- Loading Indicator for AI -->
                     <div id="aiLoading" class="alert alert-info d-none text-center py-3 mb-4">
                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                        <span class="fw-semibold">Menganalisis gambar struk via AI Vision... Harap tunggu sebentar.</span>
+                        <span class="fw-semibold" id="aiLoadingText">Menganalisis gambar struk via AI Vision... Harap tunggu sebentar.</span>
                     </div>
 
                     <!-- Alert message -->
@@ -158,31 +170,27 @@
                 </div>
             </div>
 
-            <!-- STEP 4: TRANSFER BANK ALTERNATIF -->
+            <!-- STEP 4: TRANSFER BANK & E-WALLET ALTERNATIF (MULTI-BANK) -->
             <div class="card shadow-sm mb-4 border-0">
                 <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                     <h5 class="mb-0 fw-bold text-primary fs-6">
-                        <i class="fa-solid fa-building-columns me-2"></i> Rekening Bank Alternatif (Opsional)
+                        <i class="fa-solid fa-building-columns me-2"></i> Opsi Bank / E-Wallet Alternatif (Opsional)
                     </h5>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="toggleBankOption">
-                        <label class="form-check-label text-muted small" for="toggleBankOption">Aktifkan Opsi Bank</label>
+                        <label class="form-check-label text-muted small" for="toggleBankOption">Aktifkan Opsi Bank/E-Wallet</label>
                     </div>
                 </div>
                 <div class="card-body p-4 d-none" id="bankFieldsContainer">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label text-dark small fw-semibold">Nama Bank / E-Wallet</label>
-                            <input type="text" name="bank_name" class="form-control" placeholder="Contoh: BCA / Mandiri / GoPay" value="{{ old('bank_name') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label text-dark small fw-semibold">Nomor Rekening / HP</label>
-                            <input type="text" name="bank_account_number" class="form-control" placeholder="Contoh: 1234567890" value="{{ old('bank_account_number') }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label text-dark small fw-semibold">Atas Nama (A.N)</label>
-                            <input type="text" name="bank_account_holder" class="form-control" placeholder="Contoh: Leo Suwandi" value="{{ old('bank_account_holder') }}">
-                        </div>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <p class="text-muted small mb-0">Kamu bisa menambahkan lebih dari 1 opsi rekening bank atau e-wallet (BCA, Mandiri, GoPay, OVO, dll).</p>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddBankRow">
+                            <i class="fa-solid fa-plus me-1"></i> Tambah Bank / E-Wallet
+                        </button>
+                    </div>
+
+                    <div id="banksListContainer" class="vstack gap-3">
+                        <!-- Dynamic Bank Cards -->
                     </div>
                 </div>
             </div>
@@ -202,6 +210,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let itemIndex = 0;
+    let bankIndex = 0;
 
     const billForm = document.getElementById('billForm');
     const qrisFileInput = document.getElementById('qrisFileInput');
@@ -214,6 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const receiptFileInput = document.getElementById('receiptFileInput');
     const aiLoading = document.getElementById('aiLoading');
+    const aiLoadingText = document.getElementById('aiLoadingText');
     const aiAlert = document.getElementById('aiAlert');
 
     const btnAddManualItem = document.getElementById('btnAddManualItem');
@@ -228,6 +238,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const toggleBankOption = document.getElementById('toggleBankOption');
     const bankFieldsContainer = document.getElementById('bankFieldsContainer');
+    const btnAddBankRow = document.getElementById('btnAddBankRow');
+    const banksListContainer = document.getElementById('banksListContainer');
 
     // Helper functions for thousand formatting
     function formatThousand(val) {
@@ -259,9 +271,54 @@ document.addEventListener('DOMContentLoaded', function() {
         attachCurrencyFormatter(input);
     });
 
+    // Multi-Bank Row logic
+    function addBankRow(bankName = '', accountNumber = '', accountHolder = '') {
+        const card = document.createElement('div');
+        card.className = 'card border shadow-sm bank-row';
+        card.dataset.index = bankIndex;
+
+        card.innerHTML = `
+            <div class="card-body p-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-dark small fw-semibold">Nama Bank / E-Wallet</label>
+                        <input type="text" name="banks[${bankIndex}][bank_name]" class="form-control form-control-sm" placeholder="Contoh: BCA / GoPay / Mandiri" value="${escapeHtml(bankName)}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-dark small fw-semibold">Nomor Rekening / HP</label>
+                        <input type="text" name="banks[${bankIndex}][account_number]" class="form-control form-control-sm" placeholder="Contoh: 1234567890" value="${escapeHtml(accountNumber)}">
+                    </div>
+                    <div class="col-10 col-md-3">
+                        <label class="form-label text-dark small fw-semibold">Atas Nama (A.N.)</label>
+                        <input type="text" name="banks[${bankIndex}][account_holder]" class="form-control form-control-sm" placeholder="Contoh: Leo Suwandi" value="${escapeHtml(accountHolder)}">
+                    </div>
+                    <div class="col-2 col-md-1 text-end pt-3">
+                        <button type="button" class="btn btn-sm btn-outline-danger border-0 btn-delete-bank" title="Hapus Bank">
+                            <i class="fa-solid fa-trash-can fs-6"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        banksListContainer.appendChild(card);
+        bankIndex++;
+
+        card.querySelector('.btn-delete-bank').addEventListener('click', () => {
+            card.remove();
+        });
+    }
+
+    btnAddBankRow.addEventListener('click', function() {
+        addBankRow('', '', '');
+    });
+
     toggleBankOption.addEventListener('change', function() {
         if (this.checked) {
             bankFieldsContainer.classList.remove('d-none');
+            if (banksListContainer.children.length === 0) {
+                addBankRow('', '', '');
+            }
         } else {
             bankFieldsContainer.classList.add('d-none');
         }
@@ -314,58 +371,109 @@ document.addEventListener('DOMContentLoaded', function() {
         return { name, location };
     }
 
+    // Client-side 1-by-1 Sequential Loop for Multi-Image Receipt Scanning
     receiptFileInput.addEventListener('change', async function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
         aiLoading.classList.remove('d-none');
         aiAlert.classList.add('d-none');
 
-        const formData = new FormData();
-        formData.append('receipt_image', file);
+        let allItems = [];
+        let maxDeliveryFee = 0;
+        let maxServiceFee = 0;
+        let maxDiscount = 0;
+        let successCount = 0;
 
-        try {
-            const response = await fetch("{{ route('bills.parse-receipt', [], false) }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: formData
-            });
+        let autoCorrectedFlags = [];
 
-            const data = await response.json();
-            aiLoading.classList.add('d-none');
+        const priceTypeSelect = document.getElementById('receiptPriceTypeSelect');
+        const priceType = priceTypeSelect ? priceTypeSelect.value : 'auto';
 
-            if (data.success && data.items && data.items.length > 0) {
-                aiAlert.className = 'alert alert-success rounded-3 mb-3';
-                aiAlert.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles me-2"></i> AI berhasil mengekstrak ${data.items.length} item dari struk! Silakan periksa kembali nilainya.`;
-                aiAlert.classList.remove('d-none');
+        for (let i = 0; i < files.length; i++) {
+            const currentFile = files[i];
+            aiLoadingText.innerText = `Menganalisis gambar struk ${i + 1} dari ${files.length} via AI Vision... Harap tunggu sebentar.`;
 
-                itemsContainer.innerHTML = '';
-                itemIndex = 0;
+            const formData = new FormData();
+            formData.append('receipt_image', currentFile);
+            formData.append('receipt_price_type', priceType);
 
-                data.items.forEach(item => {
-                    addItemRow(item.name, item.qty, item.price);
+            try {
+                const response = await fetch("{{ route('bills.parse-receipt', [], false) }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: formData
                 });
 
-                if (data.delivery_fee) inputDeliveryFee.value = formatThousand(data.delivery_fee);
-                if (data.service_fee) inputServiceFee.value = formatThousand(data.service_fee);
-                if (data.discount) inputDiscount.value = formatThousand(data.discount);
+                const data = await response.json();
 
-                recalculateTotals();
-
-            } else {
-                aiAlert.className = 'alert alert-warning rounded-3 mb-3';
-                aiAlert.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i> ${data.error || 'AI tidak dapat membaca detail item struk secara otomatis. Silakan masukkan item secara manual.'}`;
-                aiAlert.classList.remove('d-none');
+                if (data.success) {
+                    successCount++;
+                    if (data.items && data.items.length > 0) {
+                        allItems = allItems.concat(data.items);
+                    }
+                    if (data.delivery_fee) maxDeliveryFee = Math.max(maxDeliveryFee, data.delivery_fee);
+                    if (data.service_fee) maxServiceFee = Math.max(maxServiceFee, data.service_fee);
+                    if (data.discount) maxDiscount = Math.max(maxDiscount, data.discount);
+                    if (data.auto_corrected) autoCorrectedFlags.push(true);
+                }
+            } catch (err) {
+                console.error(`Error processing image ${i + 1}:`, err);
             }
-        } catch (err) {
-            aiLoading.classList.add('d-none');
-            aiAlert.className = 'alert alert-danger rounded-3 mb-3';
-            aiAlert.innerHTML = `<i class="fa-solid fa-circle-exclamation me-2"></i> Gagal menghubungi service AI Vision.`;
+        }
+
+        aiLoading.classList.add('d-none');
+
+        if (successCount > 0 && allItems.length > 0) {
+            // Perform Client-Side Deduplication across overlapping screenshot items
+            const deduplicated = deduplicateItems(allItems);
+            let hasAutoCorrected = autoCorrectedFlags.includes(true);
+
+            let alertHtml = `<i class="fa-solid fa-wand-magic-sparkles me-2"></i> AI berhasil memproses ${successCount} dari ${files.length} foto struk & mengekstrak ${deduplicated.length} item!`;
+            if (hasAutoCorrected) {
+                alertHtml += `<div class="mt-2 text-dark small fw-semibold"><i class="fa-solid fa-calculator text-primary me-1"></i> Auto-Crosscheck: Sistem mendeteksi format harga total kuantitas pada struk dan secara otomatis mengoreksi harga satuan per item agar cocok dengan total belanja.</div>`;
+            }
+
+            aiAlert.className = 'alert alert-success rounded-3 mb-3';
+            aiAlert.innerHTML = alertHtml;
+            aiAlert.classList.remove('d-none');
+
+            itemsContainer.innerHTML = '';
+            itemIndex = 0;
+
+            deduplicated.forEach(item => {
+                addItemRow(item.name, item.qty, item.price);
+            });
+
+            if (maxDeliveryFee > 0) inputDeliveryFee.value = formatThousand(maxDeliveryFee);
+            if (maxServiceFee > 0) inputServiceFee.value = formatThousand(maxServiceFee);
+            if (maxDiscount > 0) inputDiscount.value = formatThousand(maxDiscount);
+
+            recalculateTotals();
+
+        } else {
+            aiAlert.className = 'alert alert-warning rounded-3 mb-3';
+            aiAlert.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i> Gagal mengekstrak item dari gambar struk. Silakan periksa file atau masukkan item secara manual.`;
             aiAlert.classList.remove('d-none');
         }
     });
+
+    // Deduplicate items algorithm (matching normalized name & unit price)
+    function deduplicateItems(items) {
+        const uniqueMap = {};
+        items.forEach(item => {
+            const normName = item.name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+            const normKey = normName + '_' + Math.round(item.price);
+            if (uniqueMap[normKey]) {
+                uniqueMap[normKey].qty = Math.max(uniqueMap[normKey].qty, item.qty);
+            } else {
+                uniqueMap[normKey] = { ...item };
+            }
+        });
+        return Object.values(uniqueMap);
+    }
 
     btnAddManualItem.addEventListener('click', function() {
         addItemRow('', 1, 0);

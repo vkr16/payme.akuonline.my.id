@@ -27,13 +27,31 @@ class BillController extends Controller
     public function parseReceipt(Request $request, ReceiptParserService $parser): JsonResponse
     {
         $request->validate([
-            'receipt_image' => 'required|image|max:10240', // Max 10MB
+            'receipt_image' => 'nullable|image|max:10240',
+            'receipt_images' => 'nullable|array',
+            'receipt_images.*' => 'image|max:10240',
+            'receipt_price_type' => 'nullable|string|in:auto,unit_price,total_price',
         ]);
 
-        $file = $request->file('receipt_image');
-        $tempPath = $file->getRealPath();
+        $priceType = $request->input('receipt_price_type', 'auto');
+        $filePaths = [];
 
-        $result = $parser->parseImage($tempPath);
+        if ($request->hasFile('receipt_images')) {
+            foreach ($request->file('receipt_images') as $file) {
+                $filePaths[] = $file->getRealPath();
+            }
+        } elseif ($request->hasFile('receipt_image')) {
+            $filePaths[] = $request->file('receipt_image')->getRealPath();
+        }
+
+        if (empty($filePaths)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Tidak ada gambar struk yang diunggah.',
+            ], 422);
+        }
+
+        $result = $parser->parseImages($filePaths, $priceType);
 
         return response()->json($result);
     }
@@ -52,6 +70,10 @@ class BillController extends Controller
             'bank_name' => 'nullable|string|max:100',
             'bank_account_number' => 'nullable|string|max:100',
             'bank_account_holder' => 'nullable|string|max:100',
+            'banks' => 'nullable|array',
+            'banks.*.bank_name' => 'nullable|string|max:100',
+            'banks.*.account_number' => 'nullable|string|max:100',
+            'banks.*.account_holder' => 'nullable|string|max:100',
             'delivery_fee' => 'nullable|numeric|min:0',
             'service_fee' => 'nullable|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
@@ -107,6 +129,38 @@ class BillController extends Controller
             ]);
         }
 
+        // Save multi banks
+        $banksData = $validated['banks'] ?? [];
+        if (empty($banksData) && !empty($validated['bank_name']) && !empty($validated['bank_account_number'])) {
+            $banksData[] = [
+                'bank_name' => $validated['bank_name'],
+                'account_number' => $validated['bank_account_number'],
+                'account_holder' => $validated['bank_account_holder'] ?? null,
+            ];
+        }
+
+        $firstBank = null;
+        foreach ($banksData as $bankItem) {
+            if (!empty($bankItem['bank_name']) && !empty($bankItem['account_number'])) {
+                $createdBank = $bill->banks()->create([
+                    'bank_name' => $bankItem['bank_name'],
+                    'account_number' => $bankItem['account_number'],
+                    'account_holder' => $bankItem['account_holder'] ?? null,
+                ]);
+                if (!$firstBank) {
+                    $firstBank = $createdBank;
+                }
+            }
+        }
+
+        if ($firstBank && empty($bill->bank_name)) {
+            $bill->update([
+                'bank_name' => $firstBank->bank_name,
+                'bank_account_number' => $firstBank->account_number,
+                'bank_account_holder' => $firstBank->account_holder,
+            ]);
+        }
+
         return redirect('/b/' . $bill->slug)
             ->with('success', 'Patungan berhasil dibuat!');
     }
@@ -116,7 +170,7 @@ class BillController extends Controller
      */
     public function show(string $slug)
     {
-        $bill = Bill::with(['items.claimItems', 'claims.claimItems.item'])
+        $bill = Bill::with(['items.claimItems', 'claims.claimItems.item', 'banks'])
             ->where('slug', $slug)
             ->firstOrFail();
 

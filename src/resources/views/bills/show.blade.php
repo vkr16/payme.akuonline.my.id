@@ -51,19 +51,37 @@
                 </div>
 
                 <!-- Bank Info Box if available -->
-                @if($bill->bank_name && $bill->bank_account_number)
+                @php
+                    $allBanks = $bill->banks->count() > 0 ? $bill->banks : collect([
+                        (object)[
+                            'bank_name' => $bill->bank_name,
+                            'account_number' => $bill->bank_account_number,
+                            'account_holder' => $bill->bank_account_holder,
+                        ]
+                    ])->filter(fn($b) => !empty($b->bank_name) && !empty($b->account_number));
+                @endphp
+
+                @if($allBanks->count() > 0)
                     <div class="p-3 rounded bg-light border text-start mt-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <span class="badge bg-warning text-dark mb-1">
-                                    <i class="fa-solid fa-building-columns me-1"></i> Transfer Bank Alternatif
-                                </span>
-                                <h6 class="fw-bold text-dark mb-0">{{ $bill->bank_name }} - {{ $bill->bank_account_number }}</h6>
-                                <small class="text-muted">A.N: {{ $bill->bank_account_holder ?: '-' }}</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-warning text-dark rounded-2" id="btnCopyBank">
-                                <i class="fa-solid fa-copy me-1"></i> Salin Rekening
-                            </button>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="badge bg-warning text-dark">
+                                <i class="fa-solid fa-building-columns me-1"></i> Opsi Transfer Bank & E-Wallet ({{ $allBanks->count() }})
+                            </span>
+                            <small class="text-muted">Pilih opsi transfer kesukaanmu</small>
+                        </div>
+
+                        <div class="vstack gap-2">
+                            @foreach($allBanks as $bank)
+                                <div class="p-2 rounded bg-white border d-flex align-items-center justify-content-between gap-2">
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">{{ $bank->bank_name }} - {{ $bank->account_number }}</h6>
+                                        <small class="text-muted">A.N: {{ $bank->account_holder ?: '-' }}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-warning text-dark rounded-2 btn-copy-bank" data-acc="{{ $bank->account_number }}" data-bank="{{ $bank->bank_name }}">
+                                        <i class="fa-solid fa-copy me-1"></i> Salin Rekening
+                                    </button>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 @endif
@@ -361,14 +379,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Copy Bank Account
-    const btnCopyBank = document.getElementById('btnCopyBank');
-    if (btnCopyBank) {
-        btnCopyBank.addEventListener('click', function() {
-            const bankAcc = "{{ $bill->bank_account_number }}";
+    document.querySelectorAll('.btn-copy-bank').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const bankAcc = this.dataset.acc;
+            const bankName = this.dataset.bank;
             navigator.clipboard.writeText(bankAcc);
-            alert('Nomor rekening ' + bankAcc + ' berhasil disalin!');
+            alert(`Nomor rekening/HP ${bankName} (${bankAcc}) berhasil disalin!`);
         });
-    }
+    });
 
     // Claim item quantity controls
     participantItemsList.addEventListener('click', function(e) {
