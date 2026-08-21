@@ -3,8 +3,9 @@
 use App\Http\Controllers\BillController;
 use Illuminate\Support\Facades\Route;
 
+// Redirect root to /create using clean relative path
 Route::get('/', function () {
-    return redirect()->route('bills.create');
+    return redirect('/create');
 });
 
 Route::get('/create', [BillController::class, 'create'])->name('bills.create');
