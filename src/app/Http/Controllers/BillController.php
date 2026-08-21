@@ -107,7 +107,7 @@ class BillController extends Controller
             ]);
         }
 
-        return redirect()->route('bills.show', $bill->slug)
+        return redirect()->route('bills.show', ['slug' => $bill->slug])
             ->with('success', 'Patungan berhasil dibuat!');
     }
 
