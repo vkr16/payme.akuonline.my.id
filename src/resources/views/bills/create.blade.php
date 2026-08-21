@@ -133,17 +133,17 @@
                                     <div class="row g-2 mb-2">
                                         <div class="col-6">
                                             <label class="form-label text-muted small mb-1">Ongkos Kirim</label>
-                                            <input type="number" name="delivery_fee" id="inputDeliveryFee" class="form-control form-control-sm" placeholder="0" value="{{ old('delivery_fee', 0) }}" min="0">
+                                            <input type="text" inputmode="numeric" name="delivery_fee" id="inputDeliveryFee" class="form-control form-control-sm currency-input" placeholder="0" value="{{ old('delivery_fee', 0) }}">
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label text-muted small mb-1">Biaya Layanan</label>
-                                            <input type="number" name="service_fee" id="inputServiceFee" class="form-control form-control-sm" placeholder="0" value="{{ old('service_fee', 0) }}" min="0">
+                                            <input type="text" inputmode="numeric" name="service_fee" id="inputServiceFee" class="form-control form-control-sm currency-input" placeholder="0" value="{{ old('service_fee', 0) }}">
                                         </div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label text-muted small mb-1">Total Diskon / Voucher</label>
-                                        <input type="number" name="discount" id="inputDiscount" class="form-control form-control-sm text-success fw-bold" placeholder="0" value="{{ old('discount', 0) }}" min="0">
+                                        <input type="text" inputmode="numeric" name="discount" id="inputDiscount" class="form-control form-control-sm text-success fw-bold currency-input" placeholder="0" value="{{ old('discount', 0) }}">
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
@@ -203,6 +203,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let itemIndex = 0;
 
+    const billForm = document.getElementById('billForm');
     const qrisFileInput = document.getElementById('qrisFileInput');
     const qrisStaticPayload = document.getElementById('qrisStaticPayload');
     const qrisCanvas = document.getElementById('qrisCanvas');
@@ -227,6 +228,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const toggleBankOption = document.getElementById('toggleBankOption');
     const bankFieldsContainer = document.getElementById('bankFieldsContainer');
+
+    // Helper functions for thousand formatting
+    function formatThousand(val) {
+        if (val === null || val === undefined || val === '') return '';
+        const digits = String(val).replace(/\D/g, '');
+        if (!digits) return '';
+        return parseInt(digits, 10).toLocaleString('id-ID');
+    }
+
+    function parseRawNumber(val) {
+        if (!val) return 0;
+        const digits = String(val).replace(/\D/g, '');
+        return parseInt(digits, 10) || 0;
+    }
+
+    function attachCurrencyFormatter(input) {
+        if (input.value) {
+            input.value = formatThousand(input.value);
+        }
+        input.addEventListener('input', function() {
+            const raw = parseRawNumber(this.value);
+            this.value = raw > 0 ? formatThousand(raw) : '';
+            recalculateTotals();
+        });
+    }
+
+    // Attach currency formatter to static extra fee inputs
+    [inputDeliveryFee, inputServiceFee, inputDiscount].forEach(input => {
+        attachCurrencyFormatter(input);
+    });
 
     toggleBankOption.addEventListener('change', function() {
         if (this.checked) {
@@ -317,9 +348,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     addItemRow(item.name, item.qty, item.price);
                 });
 
-                if (data.delivery_fee) inputDeliveryFee.value = data.delivery_fee;
-                if (data.service_fee) inputServiceFee.value = data.service_fee;
-                if (data.discount) inputDiscount.value = data.discount;
+                if (data.delivery_fee) inputDeliveryFee.value = formatThousand(data.delivery_fee);
+                if (data.service_fee) inputServiceFee.value = formatThousand(data.service_fee);
+                if (data.discount) inputDiscount.value = formatThousand(data.discount);
 
                 recalculateTotals();
 
@@ -365,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="col-6 col-md-4">
                         <label class="form-label text-muted small mb-1 fw-bold">Harga Satuan (Rp)</label>
                         <div class="d-flex align-items-center gap-2">
-                            <input type="number" name="items[${itemIndex}][price]" class="form-control form-control-sm item-price" placeholder="0" value="${price}" min="0" step="100" required>
+                            <input type="text" inputmode="numeric" name="items[${itemIndex}][price]" class="form-control form-control-sm item-price currency-input" placeholder="0" value="${formatThousand(price)}" required>
                             <button type="button" class="btn btn-sm btn-outline-danger border-0 btn-delete-row" title="Hapus Item">
                                 <i class="fa-solid fa-trash-can fs-6"></i>
                             </button>
@@ -384,6 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const priceInput = card.querySelector('.item-price');
         const btnDelete = card.querySelector('.btn-delete-row');
 
+        attachCurrencyFormatter(priceInput);
+
         btnMinus.addEventListener('click', () => {
             let val = parseInt(qtyInput.value) || 1;
             if (val > 1) {
@@ -399,7 +432,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         qtyInput.addEventListener('input', recalculateTotals);
-        priceInput.addEventListener('input', recalculateTotals);
 
         btnDelete.addEventListener('click', () => {
             card.remove();
@@ -412,29 +444,32 @@ document.addEventListener('DOMContentLoaded', function() {
         recalculateTotals();
     }
 
-    [inputDeliveryFee, inputServiceFee, inputDiscount].forEach(input => {
-        input.addEventListener('input', recalculateTotals);
-    });
-
     function recalculateTotals() {
         let itemsSubtotal = 0;
         const rows = itemsContainer.querySelectorAll('.item-row');
 
         rows.forEach(row => {
             const qty = parseInt(row.querySelector('.item-qty').value) || 0;
-            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            const price = parseRawNumber(row.querySelector('.item-price').value);
             itemsSubtotal += (qty * price);
         });
 
-        const deliveryFee = parseFloat(inputDeliveryFee.value) || 0;
-        const serviceFee = parseFloat(inputServiceFee.value) || 0;
-        const discount = parseFloat(inputDiscount.value) || 0;
+        const deliveryFee = parseRawNumber(inputDeliveryFee.value);
+        const serviceFee = parseRawNumber(inputServiceFee.value);
+        const discount = parseRawNumber(inputDiscount.value);
 
         const grandTotal = Math.max(0, itemsSubtotal + deliveryFee + serviceFee - discount);
 
         displayItemsSubtotal.innerText = formatRupiah(itemsSubtotal);
         displayGrandTotal.innerText = formatRupiah(grandTotal);
     }
+
+    // On Form Submit: strip formatting (dots) so backend receives clean integers
+    billForm.addEventListener('submit', function() {
+        document.querySelectorAll('.currency-input').forEach(input => {
+            input.value = parseRawNumber(input.value);
+        });
+    });
 
     function formatRupiah(num) {
         return new Intl.NumberFormat('id-ID', {
