@@ -6,6 +6,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PayMe - QRIS Split Bill Generator')</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/qrlogo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/qrlogo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/qrlogo.png') }}">
+
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.min.css') }}">
 
@@ -46,13 +51,19 @@
     <!-- Navbar (Light Theme) -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-primary fs-4" href="{{ route('bills.create') }}">
-                <i class="fa-solid fa-qrcode"></i>
-                <span>PayMe</span>
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('bills.create') }}">
+                <img src="{{ asset('images/qrlogo.png') }}" alt="PayMe" width="34" height="34" class="d-inline-block rounded">
+                <div class="d-flex flex-column lh-1">
+                    <span class="fw-bold text-primary fs-4 mb-0">PayMe</span>
+                    <span class="text-muted fw-normal" style="font-size: 0.68rem; margin-top: 2px;">by AkuOnline</span>
+                </div>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('bills.create') }}" class="btn btn-outline-primary btn-sm">
-                    <i class="fa-solid fa-plus me-1"></i> Buat Patungan Baru
+                <button type="button" class="btn btn-warning btn-sm fw-bold rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#coffeeModal">
+                    <i class="fa-solid fa-mug-hot me-1"></i> Buy Me Coffee
+                </button>
+                <a href="{{ route('bills.create') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-plus me-1"></i> Buat Patungan
                 </a>
             </div>
         </div>
@@ -80,9 +91,39 @@
     <!-- Footer -->
     <footer class="py-3 text-center text-muted border-top bg-white mt-auto">
         <div class="container">
-            <p class="mb-0 small">&copy; {{ date('Y') }} PayMe &bull; QRIS Split Bill Utility</p>
+            <p class="mb-1 small">&copy; {{ date('Y') }} PayMe &bull; QRIS Static to Dynamic Split Bill</p>
+            <p class="mb-0 small text-secondary">
+                Dibuat oleh <strong>Fikri M</strong> dari <strong>AkuOnline</strong> menggunakan <span class="text-primary fw-semibold"><i class="fa-solid fa-rocket me-1"></i>Antigravity</span>
+            </p>
         </div>
     </footer>
+
+    <!-- BUY ME A COFFEE MODAL -->
+    <div class="modal fade" id="coffeeModal" tabindex="-1" aria-labelledby="coffeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10 border-warning border-opacity-25">
+                    <h5 class="modal-title fw-bold text-dark fs-6" id="coffeeModalLabel">
+                        <i class="fa-solid fa-mug-hot text-warning me-2 fs-5"></i> Traktir Kopi (Buy Me a Coffee)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p class="text-muted small mb-3">Suka dengan aplikasi <strong>PayMe</strong>? Dukung pengembang agar aplikasi ini tetap gratis & aktif dikembangkan!</p>
+
+                    <div class="p-3 bg-light rounded border d-inline-block shadow-sm mb-3">
+                        <img src="{{ asset('images/qris-coffee.png') }}" alt="QRIS Support" class="img-fluid rounded" style="max-width: 260px;" onerror="this.onerror=null; this.src='https://via.placeholder.com/260x260?text=Scan+QRIS+Kopi';">
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-1">Fikri M - AkuOnline</h6>
+                    <small class="text-muted d-block">Terima kasih banyak atas apresiasi dan dukungannya! ☕❤️</small>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap 5 JS -->
     <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
