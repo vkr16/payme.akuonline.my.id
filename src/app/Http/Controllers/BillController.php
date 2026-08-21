@@ -67,6 +67,8 @@ class BillController extends Controller
             'qris_static_payload' => 'nullable|string',
             'qris_image' => 'nullable|image|max:10240',
             'receipt_image' => 'nullable|image|max:10240',
+            'receipt_images' => 'nullable|array',
+            'receipt_images.*' => 'image|max:10240',
             'bank_name' => 'nullable|string|max:100',
             'bank_account_number' => 'nullable|string|max:100',
             'bank_account_holder' => 'nullable|string|max:100',
@@ -90,7 +92,9 @@ class BillController extends Controller
         }
 
         $receiptImagePath = null;
-        if ($request->hasFile('receipt_image')) {
+        if ($request->hasFile('receipt_images') && count($request->file('receipt_images')) > 0) {
+            $receiptImagePath = $request->file('receipt_images')[0]->store('bills/receipts', 'public');
+        } elseif ($request->hasFile('receipt_image')) {
             $receiptImagePath = $request->file('receipt_image')->store('bills/receipts', 'public');
         }
 
