@@ -9,6 +9,7 @@ use App\Services\QrisService;
 use App\Services\ReceiptParserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class BillController extends Controller
@@ -182,6 +183,29 @@ class BillController extends Controller
     }
 
     /**
+     * Serve uploaded receipt image safely with proper content headers.
+     */
+    public function receiptImage(string $slug)
+    {
+        $bill = Bill::where('slug', $slug)->firstOrFail();
+
+        if (empty($bill->receipt_image_path)) {
+            abort(404, 'Foto struk tidak ditemukan pada patungan ini.');
+        }
+
+        if (Storage::disk('public')->exists($bill->receipt_image_path)) {
+            return Storage::disk('public')->response($bill->receipt_image_path);
+        }
+
+        $fullPath = storage_path('app/public/' . $bill->receipt_image_path);
+        if (file_exists($fullPath)) {
+            return response()->file($fullPath);
+        }
+
+        abort(404, 'File gambar struk tidak ditemukan di server.');
+    }
+
+    /**
      * Calculate nominal & generate dynamic QRIS for selected items.
      */
     public function generateDynamicQris(Request $request, string $slug, QrisService $qrisService): JsonResponse
@@ -189,6 +213,7 @@ class BillController extends Controller
         $bill = Bill::with(['items.claimItems'])->where('slug', $slug)->firstOrFail();
 
         $selectedItems = $request->input('items', []); // format: [item_id => quantity]
+        $roundUp = $request->boolean('round_up', false);
 
         $itemsSubtotal = 0;
 
@@ -211,9 +236,18 @@ class BillController extends Controller
             $feeShare = $proportion * $netExtraFees;
         }
 
-        $totalPayable = round($itemsSubtotal + $feeShare);
-        if ($totalPayable < 0) {
-            $totalPayable = 0;
+        $exactPayable = round($itemsSubtotal + $feeShare);
+        if ($exactPayable < 0) {
+            $exactPayable = 0;
+        }
+
+        $totalPayable = $exactPayable;
+        $roundUpExtra = 0;
+
+        if ($roundUp && $exactPayable > 0) {
+            $roundedPayable = (int) (ceil($exactPayable / 1000) * 1000);
+            $roundUpExtra = max(0, $roundedPayable - $exactPayable);
+            $totalPayable = $roundedPayable;
         }
 
         $dynamicQrisPayload = '';
@@ -225,6 +259,8 @@ class BillController extends Controller
             'success' => true,
             'items_subtotal' => $itemsSubtotal,
             'fee_share' => $feeShare,
+            'exact_payable' => $exactPayable,
+            'round_up_extra' => $roundUpExtra,
             'total_payable' => $totalPayable,
             'dynamic_qris_payload' => $dynamicQrisPayload,
             'merchant_name' => $bill->qris_merchant_name ?: $bill->host_name,
@@ -247,6 +283,7 @@ class BillController extends Controller
         $validated = $request->validate([
             'payer_name' => 'required|string|max:100',
             'payment_method' => 'nullable|string|max:50',
+            'round_up' => 'nullable|boolean',
             'items' => 'required|array|min:1',
             'items.*' => 'required|integer|min:1',
         ]);
@@ -254,6 +291,7 @@ class BillController extends Controller
         $payerName = trim($validated['payer_name']);
         $paymentMethod = $validated['payment_method'] ?? 'qris';
         $selectedItems = $validated['items'];
+        $roundUp = (bool) ($validated['round_up'] ?? false);
 
         $itemsSubtotal = 0;
         $validItemsToClaim = [];
@@ -286,7 +324,12 @@ class BillController extends Controller
             $feeShare = $proportion * $netExtraFees;
         }
 
-        $totalPaid = round($itemsSubtotal + $feeShare);
+        $exactPaid = round($itemsSubtotal + $feeShare);
+        $totalPaid = $exactPaid;
+
+        if ($roundUp && $exactPaid > 0) {
+            $totalPaid = (int) (ceil($exactPaid / 1000) * 1000);
+        }
 
         // Save BillClaim
         $claim = BillClaim::create([

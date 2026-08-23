@@ -165,6 +165,24 @@
                     <span class="fw-semibold text-primary" id="summaryMyFeeShare">Rp 0</span>
                 </div>
 
+                <!-- OPSI BULATKAN KE ATAS (TIP/TERIMA KASIH) -->
+                <div class="p-2 px-3 bg-light rounded border mb-3">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between ps-0 mb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="toggleRoundUp" style="cursor: pointer;">
+                            <div>
+                                <label class="form-check-label fw-semibold text-dark small cursor-pointer" for="toggleRoundUp">
+                                    <i class="fa-solid fa-arrow-trend-up text-primary me-1"></i> Bulatkan ke atas ke ribuan terdekat
+                                </label>
+                                <small class="text-muted d-block" id="roundUpHelperText" style="font-size: 0.73rem;">
+                                    Lebihkan sedikit nominal transfer sebagai tanda terima kasih / tip ke <strong>{{ $bill->host_name }}</strong>.
+                                </small>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fw-bold d-none" id="roundUpDiffBadge">+Rp 0</span>
+                    </div>
+                </div>
+
                 <hr class="my-3">
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -254,7 +272,12 @@
                 </span>
 
                 <h3 class="fw-bold text-primary display-6 my-2" id="modalNominalDisplay">Rp 0</h3>
-                <p class="text-muted small mb-3">Nominal pembayaran sudah terkunci otomatis di QR Code ini.</p>
+                <p class="text-muted small mb-2" id="modalNominalSubtext">Nominal pembayaran sudah terkunci otomatis di QR Code ini.</p>
+                <div id="modalRoundUpNote" class="d-none mb-3">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                        <i class="fa-solid fa-heart me-1 text-danger"></i> Termasuk pembulatan ke atas sebagai tanda terima kasih
+                    </span>
+                </div>
 
                 <!-- Canvas / QR Code Render Area -->
                 <div class="p-3 bg-white rounded border d-inline-block shadow-sm mb-3" id="modalQrCodeContainer"></div>
@@ -303,6 +326,10 @@
                 <div class="p-3 rounded bg-light border mb-3">
                     <h6 class="fw-bold text-dark mb-2 small">Rincian Yang Diklaim:</h6>
                     <div id="claimItemsSummaryList" class="small text-muted mb-2"></div>
+                    <div id="claimRoundUpRow" class="d-none justify-content-between align-items-center text-primary small mb-2">
+                        <span><i class="fa-solid fa-arrow-trend-up me-1"></i> Pembulatan ke Atas (Tip):</span>
+                        <span class="fw-semibold" id="claimRoundUpAmount">+Rp 0</span>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                         <span class="fw-bold text-dark small">Total Tagihan:</span>
                         <span class="fw-bold text-success fs-5" id="claimTotalDisplay">Rp 0</span>
@@ -330,12 +357,12 @@
             </div>
             <div class="modal-body text-center p-3">
                 <div class="p-2 rounded bg-light border d-inline-block w-100" style="max-height: 70vh; overflow-y: auto;">
-                    <img src="{{ asset('storage/' . $bill->receipt_image_path) }}" alt="Struk Asli" class="img-fluid rounded border shadow-sm">
+                    <img src="{{ route('bills.receipt', ['slug' => $bill->slug], false) }}" alt="Struk Asli" class="img-fluid rounded border shadow-sm" onerror="this.onerror=null; this.src='{{ asset('storage/' . $bill->receipt_image_path) }}';">
                 </div>
             </div>
             <div class="modal-footer justify-content-between">
                 <small class="text-muted"><i class="fa-solid fa-eye me-1"></i> Transparansi total: foto struk diunggah langsung oleh Host ({{ $bill->host_name }}).</small>
-                <a href="{{ asset('storage/' . $bill->receipt_image_path) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
+                <a href="{{ route('bills.receipt', ['slug' => $bill->slug], false) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
                     <i class="fa-solid fa-up-right-from-square me-1"></i> Buka Gambar Penuh
                 </a>
             </div>
@@ -358,11 +385,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const summaryMyTotalPayable = document.getElementById('summaryMyTotalPayable');
     const btnProcessQris = document.getElementById('btnProcessQris');
 
+    const toggleRoundUp = document.getElementById('toggleRoundUp');
+    const roundUpDiffBadge = document.getElementById('roundUpDiffBadge');
+    const roundUpHelperText = document.getElementById('roundUpHelperText');
+
     const qrisModal = new bootstrap.Modal(document.getElementById('qrisModal'));
     const claimModal = new bootstrap.Modal(document.getElementById('claimModal'));
     
     const modalMerchantName = document.getElementById('modalMerchantName');
     const modalNominalDisplay = document.getElementById('modalNominalDisplay');
+    const modalRoundUpNote = document.getElementById('modalRoundUpNote');
     const modalQrCodeContainer = document.getElementById('modalQrCodeContainer');
     const btnDownloadQr = document.getElementById('btnDownloadQr');
     const btnCopyQrisString = document.getElementById('btnCopyQrisString');
@@ -371,6 +403,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnOpenClaimFromModal = document.getElementById('btnOpenClaimFromModal');
     const claimPayerNameInput = document.getElementById('claimPayerNameInput');
     const claimItemsSummaryList = document.getElementById('claimItemsSummaryList');
+    const claimRoundUpRow = document.getElementById('claimRoundUpRow');
+    const claimRoundUpAmount = document.getElementById('claimRoundUpAmount');
     const claimTotalDisplay = document.getElementById('claimTotalDisplay');
     const btnSubmitClaim = document.getElementById('btnSubmitClaim');
 
@@ -453,9 +487,19 @@ document.addEventListener('DOMContentLoaded', function() {
             feeShare = proportion * netExtraFees;
         }
 
-        const totalPayable = Math.max(0, Math.round(subtotal + feeShare));
+        const exactPayable = Math.max(0, Math.round(subtotal + feeShare));
+        const isRoundUp = toggleRoundUp ? toggleRoundUp.checked : false;
 
-        return { items, itemsList, subtotal, feeShare, totalPayable };
+        let totalPayable = exactPayable;
+        let roundUpExtra = 0;
+
+        if (isRoundUp && exactPayable > 0) {
+            const rounded = Math.ceil(exactPayable / 1000) * 1000;
+            roundUpExtra = Math.max(0, rounded - exactPayable);
+            totalPayable = rounded;
+        }
+
+        return { items, itemsList, subtotal, feeShare, exactPayable, roundUpExtra, isRoundUp, totalPayable };
     }
 
     function recalculateParticipantSummary() {
@@ -465,6 +509,23 @@ document.addEventListener('DOMContentLoaded', function() {
         summaryMyItemsSubtotal.innerText = formatRupiah(data.subtotal);
         summaryMyFeeShare.innerText = formatRupiah(data.feeShare);
         summaryMyTotalPayable.innerText = formatRupiah(data.totalPayable);
+
+        if (toggleRoundUp && toggleRoundUp.checked && data.subtotal > 0) {
+            roundUpDiffBadge.classList.remove('d-none');
+            roundUpDiffBadge.innerText = '+Rp ' + data.roundUpExtra.toLocaleString('id-ID');
+            if (data.roundUpExtra > 0) {
+                roundUpHelperText.innerHTML = `Dibulatkan dari <strong>${formatRupiah(data.exactPayable)}</strong> (+${formatRupiah(data.roundUpExtra)} tip/terima kasih)`;
+            } else {
+                roundUpHelperText.innerHTML = `Nominal sudah pas ribuan (<strong>${formatRupiah(data.exactPayable)}</strong>)`;
+            }
+        } else if (toggleRoundUp) {
+            roundUpDiffBadge.classList.add('d-none');
+            roundUpHelperText.innerHTML = `Lebihkan sedikit nominal transfer sebagai tanda terima kasih / tip ke <strong>${escapeHtml("{{ $bill->host_name }}")}</strong>.`;
+        }
+    }
+
+    if (toggleRoundUp) {
+        toggleRoundUp.addEventListener('change', recalculateParticipantSummary);
     }
 
     // Process Dynamic QRIS
@@ -486,7 +547,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ items: selection.items })
+                    body: JSON.stringify({
+                        items: selection.items,
+                        round_up: selection.isRoundUp
+                    })
                 });
 
                 const data = await response.json();
@@ -497,6 +561,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentQrisPayload = data.dynamic_qris_payload;
                     modalMerchantName.innerText = data.merchant_name || 'Merchant';
                     modalNominalDisplay.innerText = formatRupiah(data.total_payable);
+
+                    if (data.round_up_extra > 0) {
+                        modalRoundUpNote.classList.remove('d-none');
+                    } else {
+                        modalRoundUpNote.classList.add('d-none');
+                    }
 
                     // Render QR Code
                     modalQrCodeContainer.innerHTML = '';
@@ -542,6 +612,16 @@ document.addEventListener('DOMContentLoaded', function() {
         html += '</ul>';
 
         claimItemsSummaryList.innerHTML = html;
+
+        if (selection.isRoundUp && selection.roundUpExtra > 0) {
+            claimRoundUpRow.classList.remove('d-none');
+            claimRoundUpRow.classList.add('d-flex');
+            claimRoundUpAmount.innerText = '+Rp ' + selection.roundUpExtra.toLocaleString('id-ID');
+        } else {
+            claimRoundUpRow.classList.add('d-none');
+            claimRoundUpRow.classList.remove('d-flex');
+        }
+
         claimTotalDisplay.innerText = formatRupiah(selection.totalPayable);
 
         claimModal.show();
@@ -574,7 +654,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     payer_name: payerName,
-                    items: selection.items
+                    items: selection.items,
+                    round_up: selection.isRoundUp
                 })
             });
 
