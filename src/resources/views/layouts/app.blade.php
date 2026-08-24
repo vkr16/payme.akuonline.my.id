@@ -11,6 +11,11 @@
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/qrlogo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/qrlogo.png') }}">
 
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Bootstrap 5 CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.min.css') }}">
 
@@ -23,69 +28,132 @@
 
     <style>
         :root {
-            --bs-body-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --bs-primary: #2563eb;
-            --bs-primary-rgb: 37, 99, 235;
+            --bs-body-font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --bs-primary: #0284c7;
+            --bs-primary-rgb: 2, 132, 199;
+            --payme-primary: #0284c7;
+            --payme-teal: #0d9488;
+            --payme-indigo: #4f46e5;
+            --payme-bg: #f8fafc;
         }
 
         body {
-            background-color: #f8fafc;
-            min-height: 100vh;
+            background-color: var(--payme-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.06) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(79, 70, 229, 0.03) 0px, transparent 70%);
+            background-attachment: fixed;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
-            color: #1e293b;
+            color: #0f172a;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            scrollbar-gutter: stable;
+            overscroll-behavior: contain;
         }
 
-        /* Modern card styling */
-        .card {
-            border-radius: 0.875rem;
-            border: 1px solid #e2e8f0;
-            background-color: #ffffff;
-            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        /* Glassmorphism Navigation Bar */
+        .navbar-glass {
+            background: rgba(255, 255, 255, 0.82) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);
+        }
+
+        .brand-logo-glow {
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .brand-logo-glow:hover {
+            transform: scale(1.05);
+        }
+
+        /* Glassmorphism Card Styling */
+        .card, .glass-card {
+            border-radius: 1.25rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .card-header {
-            background-color: #ffffff;
-            border-bottom: 1px solid #f1f5f9;
+            background: rgba(255, 255, 255, 0.6);
+            border-bottom: 1px solid rgba(241, 245, 249, 0.9);
+            border-top-left-radius: 1.25rem !important;
+            border-top-right-radius: 1.25rem !important;
         }
 
-        /* Interactive Upload Dropzone */
+        /* Modern Gradient Buttons */
+        .btn-gradient-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-gradient-primary:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #0f766e 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-pill {
+            border-radius: 9999px;
+        }
+
+        .btn-rounded {
+            border-radius: 0.75rem;
+        }
+
+        /* Interactive Upload Dropzone with Glass */
         .upload-dropzone {
             border: 2px dashed #cbd5e1;
-            background-color: #f8fafc;
-            border-radius: 0.75rem;
-            padding: 1.75rem 1.25rem;
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 1rem;
+            padding: 2rem 1.25rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             display: block;
         }
 
         .upload-dropzone:hover,
         .upload-dropzone:focus-within,
         .upload-dropzone.dragover {
-            border-color: #2563eb;
-            background-color: #eff6ff;
+            border-color: var(--payme-primary);
+            background: rgba(240, 249, 255, 0.9);
+            box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.1);
+            transform: scale(1.005);
         }
 
         /* Form input enhancements */
         .form-control, .form-select {
             border-color: #cbd5e1;
-            border-radius: 0.5rem;
-            padding: 0.55rem 0.85rem;
+            border-radius: 0.75rem;
+            padding: 0.65rem 0.95rem;
             font-size: 0.95rem;
-            color: #1e293b;
+            color: #0f172a;
+            background-color: rgba(255, 255, 255, 0.9);
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            border-color: var(--payme-primary);
+            box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.15);
+            background-color: #ffffff;
         }
 
-        /* Minimum touch targets for mobile accessibility */
+        /* Touch Targets for Mobile Accessibility */
         .btn-touch-target {
             min-height: 44px;
             min-width: 44px;
@@ -102,7 +170,8 @@
             align-items: center;
             justify-content: center;
             padding: 0;
-            border-radius: 0.375rem;
+            border-radius: 0.5rem;
+            transition: all 0.15s ease-in-out;
         }
 
         @media (pointer: coarse) {
@@ -112,37 +181,48 @@
             }
         }
 
-        /* Badge and subtle pill styles */
+        /* Badge and pill styles */
         .badge {
             font-weight: 600;
             letter-spacing: 0.01em;
+            border-radius: 9999px;
         }
 
         .cursor-pointer {
             cursor: pointer;
         }
+
+        /* Glass Modal */
+        .modal-content.glass-modal {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+        }
     </style>
 
     @yield('styles')
 </head>
-<body class="bg-light text-dark">
-    <!-- Navbar (Light Theme) -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top py-2">
+<body class="text-dark">
+    <!-- Navbar (Glassmorphism Header) -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-glass sticky-top py-2.5">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('bills.create') }}">
-                <img src="{{ asset('images/qrlogo.png') }}" alt="PayMe" width="34" height="34" class="d-inline-block rounded">
+            <a class="navbar-brand d-flex align-items-center gap-2.5" href="{{ route('bills.create') }}">
+                <img src="{{ asset('images/qrlogo.png') }}" alt="PayMe" width="38" height="38" class="d-inline-block rounded-3 brand-logo-glow">
                 <div class="d-flex flex-column lh-1">
-                    <span class="fw-bold text-primary fs-4 mb-0">PayMe</span>
-                    <span class="text-muted fw-normal" style="font-size: 0.68rem; margin-top: 2px;">by AkuOnline</span>
+                    <span class="fw-extrabold text-dark fs-4 mb-0 tracking-tight" style="letter-spacing: -0.03em;">PayMe</span>
+                    <span class="text-muted fw-medium" style="font-size: 0.68rem; margin-top: 2px;">by AkuOnline</span>
                 </div>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-warning btn-sm fw-semibold rounded-pill px-3 shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#coffeeModal">
-                    <i class="fa-solid fa-mug-hot me-1"></i>
+                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-3 shadow-xs d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#coffeeModal">
+                    <i class="fa-solid fa-mug-hot text-dark"></i>
                     <span>Traktir Kopi</span>
                 </button>
-                <a href="{{ route('bills.create') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-flex align-items-center gap-1">
-                    <i class="fa-solid fa-plus me-1"></i>
+                <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-sm btn-pill px-3.5 d-flex align-items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i>
                     <span>Buat Patungan</span>
                 </a>
             </div>
@@ -152,20 +232,20 @@
     <!-- Main Content -->
     <main class="container py-4 flex-grow-1">
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+            <div class="alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm rounded-4 bg-success bg-opacity-10 text-success border border-success border-opacity-25" role="alert">
                 <div class="d-flex align-items-center">
                     <i class="fa-solid fa-circle-check fs-5 me-2 flex-shrink-0"></i>
-                    <div>{{ session('success') }}</div>
+                    <div class="fw-semibold">{{ session('success') }}</div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm rounded-4 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" role="alert">
                 <div class="d-flex align-items-center">
                     <i class="fa-solid fa-circle-exclamation fs-5 me-2 flex-shrink-0"></i>
-                    <div>{{ session('error') }}</div>
+                    <div class="fw-semibold">{{ session('error') }}</div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
             </div>
@@ -175,9 +255,9 @@
     </main>
 
     <!-- Footer -->
-    <footer class="py-3 text-center text-muted border-top bg-white mt-auto">
+    <footer class="py-4 text-center text-muted border-top bg-white bg-opacity-50 mt-auto backdrop-blur">
         <div class="container">
-            <p class="mb-1 small">&copy; {{ date('Y') }} PayMe &bull; QRIS Static to Dynamic Split Bill</p>
+            <p class="mb-1 small font-medium">&copy; {{ date('Y') }} PayMe &bull; Solusi Patungan QRIS Statis ke Dinamis</p>
             <p class="mb-0 small text-secondary">
                 Dikembangkan oleh <strong>Fikri M</strong> dari <strong>AkuOnline</strong> menggunakan <span class="text-primary fw-semibold"><i class="fa-solid fa-rocket me-1"></i>Antigravity</span>
             </p>
@@ -187,8 +267,8 @@
     <!-- BUY ME A COFFEE MODAL -->
     <div class="modal fade" id="coffeeModal" tabindex="-1" aria-labelledby="coffeeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning bg-opacity-10 border-warning border-opacity-25">
+            <div class="modal-content glass-modal border-0">
+                <div class="modal-header border-bottom border-light py-3">
                     <h5 class="modal-title fw-bold text-dark fs-6 d-flex align-items-center" id="coffeeModalLabel">
                         <i class="fa-solid fa-mug-hot text-warning me-2 fs-5"></i> Traktir Kopi (Buy Me a Coffee)
                     </h5>
@@ -197,8 +277,8 @@
                 <div class="modal-body text-center p-4">
                     <p class="text-muted small mb-3">Suka dengan kemudahan aplikasi <strong>PayMe</strong>? Dukung pengembang agar layanan ini tetap gratis, stabil, dan terus dikembangkan secara berkelanjutan.</p>
 
-                    <div class="p-3 bg-light rounded-3 border d-inline-block shadow-sm mb-3">
-                        <img src="{{ asset('images/qris-coffee.png') }}" alt="QRIS Dukungan Kopi" class="img-fluid rounded" style="max-width: 240px;">
+                    <div class="p-3 bg-white rounded-4 border d-inline-block shadow-sm mb-3">
+                        <img src="{{ asset('images/qris-coffee.png') }}" alt="QRIS Dukungan Kopi" class="img-fluid rounded-3" style="max-width: 240px;">
                     </div>
 
                     <h6 class="fw-bold text-dark mb-1">Fikri M - AkuOnline</h6>
@@ -206,8 +286,8 @@
                         <i class="fa-solid fa-heart text-danger me-1"></i> Terima kasih atas dukungan dan apresiasi Anda!
                     </small>
                 </div>
-                <div class="modal-footer justify-content-center border-0 pt-0">
-                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                <div class="modal-footer justify-content-center border-0 pt-0 pb-4">
+                    <button type="button" class="btn btn-sm btn-secondary btn-pill px-4" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>

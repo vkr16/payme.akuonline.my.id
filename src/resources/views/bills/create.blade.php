@@ -226,7 +226,7 @@
 
             <!-- SUBMIT ACTION -->
             <div class="d-flex justify-content-end mb-5">
-                <button type="submit" class="btn btn-primary btn-lg w-100 w-sm-auto px-5 py-3 shadow-sm d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                <button type="submit" class="btn btn-gradient-primary btn-lg btn-pill w-100 w-sm-auto px-5 py-3 shadow-md d-flex align-items-center justify-content-center gap-2.5 fw-bold fs-6">
                     <i class="fa-solid fa-paper-plane"></i>
                     <span>Simpan & Buat Link Patungan</span>
                 </button>

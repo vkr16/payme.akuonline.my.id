@@ -220,13 +220,13 @@
                 <div class="row g-2">
                     <div class="col-md-7">
                         @if(!empty($bill->qris_static_payload))
-                            <button type="button" class="btn btn-primary w-100 py-3 fw-bold fs-6 shadow-sm" id="btnProcessQris">
+                            <button type="button" class="btn btn-gradient-primary btn-pill w-100 py-3 fw-bold fs-6 shadow-md" id="btnProcessQris">
                                 <i class="fa-solid fa-qrcode me-2"></i> Bayar via Dynamic QRIS
                             </button>
                         @endif
                     </div>
                     <div class="col-md-5">
-                        <button type="button" class="btn btn-outline-success w-100 py-3 fw-bold fs-6" id="btnTriggerClaimModal">
+                        <button type="button" class="btn btn-outline-success btn-pill w-100 py-3 fw-bold fs-6" id="btnTriggerClaimModal">
                             <i class="fa-solid fa-circle-check me-2"></i> Saya Sudah Bayar
                         </button>
                     </div>
