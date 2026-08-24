@@ -39,7 +39,7 @@
 
         body {
             background-color: var(--payme-bg);
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(2, 132, 199, 0.06) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(13, 148, 136, 0.06) 0px, transparent 50%),
                 radial-gradient(at 50% 50%, rgba(79, 70, 229, 0.03) 0px, transparent 70%);
@@ -153,6 +153,50 @@
             background-color: #ffffff;
         }
 
+        /* Watermark LUNAS Rubber Stamp Overlay */
+        .lunas-stamp-overlay {
+            position: absolute;
+            top: 260px;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-14deg);
+            pointer-events: none;
+            z-index: 10;
+            user-select: none;
+            opacity: 0.3;
+        }
+
+        .lunas-stamp-badge {
+            border: 8px double #053d96;
+            color: #070596;
+            padding: 1.25rem 3.5rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1);
+            background: rgba(255, 255, 255, 0.5);
+            animation: stampBounce 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .lunas-stamp-inner span {
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 14px;
+            line-height: 1;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        @keyframes stampBounce {
+            0% {
+                transform: scale(2.5) rotate(-35deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(-14deg);
+                opacity: 0.3;
+            }
+        }
+
         /* Touch Targets for Mobile Accessibility */
         .btn-touch-target {
             min-height: 44px;
@@ -211,7 +255,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2.5" href="{{ route('bills.create') }}">
                 <img src="{{ asset('images/qrlogo.png') }}" alt="PayMe" width="38" height="38" class="d-inline-block rounded-3 brand-logo-glow">
-                <div class="d-flex flex-column lh-1">
+                <div class="d-flex flex-column lh-1 ms-3">
                     <span class="fw-extrabold text-dark fs-4 mb-0 tracking-tight" style="letter-spacing: -0.03em;">PayMe</span>
                     <span class="text-muted fw-medium" style="font-size: 0.68rem; margin-top: 2px;">by AkuOnline</span>
                 </div>

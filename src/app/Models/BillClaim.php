@@ -27,8 +27,39 @@ class BillClaim extends Model
         return $this->belongsTo(Bill::class);
     }
 
+    public function getExactPayableAttribute(): float
+    {
+        $bill = $this->bill;
+        if (!$bill) {
+            return (float) $this->amount;
+        }
+
+        $itemsSubtotal = 0;
+        foreach ($this->claimItems as $cItem) {
+            if ($cItem->item) {
+                $itemsSubtotal += ($cItem->qty * $cItem->item->price);
+            }
+        }
+
+        $totalBillSubtotal = $bill->subtotal;
+        $netExtraFees = $bill->net_extra_fees;
+
+        $feeShare = 0;
+        if ($totalBillSubtotal > 0 && $itemsSubtotal > 0) {
+            $proportion = $itemsSubtotal / $totalBillSubtotal;
+            $feeShare = $proportion * $netExtraFees;
+        }
+
+        return (float) max(0, round($itemsSubtotal + $feeShare));
+    }
+
     public function claimItems(): HasMany
     {
         return $this->hasMany(BillClaimItem::class, 'bill_claim_id');
+    }
+
+    public function getSurplusAttribute(): float
+    {
+        return (float) max(0, $this->amount - $this->exact_payable);
     }
 }

@@ -4,14 +4,34 @@
 
 @section('content')
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-8 position-relative">
+
+        @if($bill->unpaid_amount <= 0 && $bill->items->count() > 0)
+            <!-- WATERMARK STAMP LUNAS -->
+            <div class="lunas-stamp-overlay" aria-hidden="true">
+                <div class="lunas-stamp-badge">
+                    <div class="lunas-stamp-inner">
+                        <i class="fa-solid fa-circle-check mb-1 d-block"></i>
+                        <span>LUNAS</span>
+                        <small class="d-block text-uppercase fw-bold">Terbayar Lunas</small>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Header Info Card -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4 text-center">
-                <span class="badge bg-primary mb-2 px-3 py-2 fs-6">
-                    <i class="fa-solid fa-user-tag me-1"></i> Ditalangin oleh: <strong>{{ $bill->host_name }}</strong>
-                </span>
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-2">
+                    <span class="badge bg-primary px-3 py-2 fs-6">
+                        <i class="fa-solid fa-user-tag me-1"></i> Ditalangin oleh: <strong>{{ $bill->host_name }}</strong>
+                    </span>
+                    @if($bill->unpaid_amount <= 0 && $bill->items->count() > 0)
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 fs-6">
+                            <i class="fa-solid fa-circle-check me-1"></i> TAGIHAN LUNAS
+                        </span>
+                    @endif
+                </div>
 
                 <h2 class="fw-bold text-dark mb-2 fs-3">{{ $bill->title }}</h2>
 
@@ -33,6 +53,14 @@
                     <div class="progress" style="height: 10px;">
                         <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ $bill->payment_progress_percentage }}%;" aria-valuenow="{{ $bill->payment_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
+                    @if($bill->total_surplus > 0)
+                        <div class="mt-2 pt-2 border-top border-light d-flex align-items-center justify-content-between">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 small fw-semibold">
+                                <i class="fa-solid fa-heart text-danger me-1"></i> Total Tip Terkumpul:
+                            </span>
+                            <span class="fw-bold text-primary small">+Rp {{ number_format($bill->total_surplus, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
                 </div>
 
                 @php
@@ -129,7 +157,7 @@
                             <!-- Top row: Item Name, Status badge, and Unit Price info -->
                             <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
                                 <div class="flex-grow-1">
-                                    <h6 class="fw-bold text-dark mb-1 fs-6">{{ $item->name }}</h6>
+                                    <h6 class="fw-bold text-dark mb-1 fs-6 text-break" style="word-break: break-word; overflow-wrap: anywhere;">{{ $item->name }}</h6>
                                     <div class="d-flex flex-wrap align-items-center gap-2 text-muted small">
                                         <span class="fw-semibold text-dark">Rp {{ number_format($item->price, 0, ',', '.') }} / item</span>
                                         <span>&bull;</span>
@@ -247,24 +275,54 @@
                 @if($bill->claims->count() > 0)
                     <div class="vstack gap-2">
                         @foreach($bill->claims->sortByDesc('created_at') as $claim)
-                            <div class="p-3 rounded bg-light border d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="fw-bold text-dark">{{ $claim->payer_name }}</span>
-                                        <span class="badge bg-success">
+                            <div class="p-3 rounded-3 bg-white border shadow-xs mb-2">
+                                <!-- Top Row: Name, Status Badges & Nominal -->
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pb-2 mb-2 border-bottom border-light">
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="fw-bold text-dark fs-6">{{ $claim->payer_name }}</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
                                             <i class="fa-solid fa-circle-check me-1"></i> Lunas
                                         </span>
+                                        @php
+                                            $pm = strtolower($claim->payment_method ?? 'qris');
+                                        @endphp
+                                        @if(str_contains($pm, 'cash') || str_contains($pm, 'tunai'))
+                                            <span class="badge bg-emerald bg-opacity-10 text-emerald border border-emerald border-opacity-25" style="background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.25);">
+                                                <i class="fa-solid fa-money-bill-wave me-1"></i> Cash / Tunai
+                                            </span>
+                                        @elseif(str_contains($pm, 'qris'))
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                                                <i class="fa-solid fa-qrcode me-1"></i> QRIS
+                                            </span>
+                                        @else
+                                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50">
+                                                <i class="fa-solid fa-building-columns text-warning me-1"></i> {{ $claim->payment_method }}
+                                            </span>
+                                        @endif
                                     </div>
-                                    <small class="text-muted d-block mt-1">
-                                        Item: 
-                                        @foreach($claim->claimItems as $cItem)
-                                            <span class="badge bg-white text-dark border me-1">{{ $cItem->item->name ?? 'Item' }} ({{ $cItem->qty }}x)</span>
-                                        @endforeach
-                                    </small>
+                                    <div class="text-end">
+                                        <span class="fw-extrabold text-success fs-5">Rp {{ number_format($claim->amount, 0, ',', '.') }}</span>
+                                        @if($claim->surplus > 0)
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 d-block mt-1 fw-medium" style="font-size: 0.72rem;">
+                                                <i class="fa-solid fa-heart text-danger me-1"></i> +Rp {{ number_format($claim->surplus, 0, ',', '.') }} Tip / Pembulatan
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="text-end">
-                                    <span class="fw-bold text-success">Rp {{ number_format($claim->amount, 0, ',', '.') }}</span>
-                                    <small class="text-muted d-block fs-8">{{ $claim->created_at->diffForHumans() }}</small>
+
+                                <!-- Bottom Row: Full-width Item Badges & Timestamp -->
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                    <div class="d-flex flex-wrap align-items-center gap-1 flex-grow-1 min-w-0">
+                                        <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                            <small class="text-muted fw-medium me-1">Item:</small>
+                                            @foreach($claim->claimItems as $cItem)
+                                                <span class="badge bg-light text-dark border fw-normal py-1.5 px-2.5 mb-1 text-wrap text-start text-break mw-100" style="font-size: 0.78rem; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">
+                                                    {{ $cItem->item->name ?? 'Item' }} <strong class="text-primary">({{ $cItem->qty }}x)</strong>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <small class="text-muted ms-auto flex-shrink-0" style="font-size: 0.72rem;">{{ $claim->created_at->diffForHumans() }}</small>
                                 </div>
                             </div>
                         @endforeach
@@ -291,24 +349,40 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center py-4">
-                <span class="badge bg-primary mb-2 px-3 py-2">
-                    Merchant: <strong id="modalMerchantName">-</strong>
-                </span>
-
-                <h3 class="fw-bold text-primary display-6 my-2" id="modalNominalDisplay">Rp 0</h3>
-                <p class="text-muted small mb-2" id="modalNominalSubtext">Nominal pembayaran sudah terkunci otomatis di QR Code ini.</p>
-                <div id="modalRoundUpNote" class="d-none mb-3">
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
-                        <i class="fa-solid fa-heart me-1 text-danger"></i> Termasuk pembulatan ke atas sebagai tanda terima kasih
+            <div class="modal-body text-center p-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 fs-6">
+                        <i class="fa-solid fa-store me-1"></i> Merchant: <strong id="modalMerchantName">-</strong>
                     </span>
+                    <span class="badge bg-light text-muted border px-2.5 py-1 small">Dynamic QRIS</span>
                 </div>
+
+                <!-- OPSI BULATKAN KE ATAS (SWITCH DI DALAM POPUP MODAL) -->
+                <div class="p-3 rounded-3 bg-light border text-start mb-3">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between ps-0 mb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <input class="form-check-input ms-0 me-2 cursor-pointer" type="checkbox" role="switch" id="modalToggleRoundUp">
+                            <div>
+                                <label class="form-check-label fw-semibold text-dark small cursor-pointer" for="modalToggleRoundUp">
+                                    <i class="fa-solid fa-arrow-trend-up text-primary me-1"></i> Bulatkan nominal ke atas
+                                </label>
+                                <small class="text-muted d-block" id="modalRoundUpHelperText" style="font-size: 0.72rem;">
+                                    Lebihkan sedikit nominal transfer sebagai tanda terima kasih / tip ke <strong>{{ $bill->host_name }}</strong>.
+                                </small>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 fw-bold d-none" id="modalRoundUpBadge">+Rp 0</span>
+                    </div>
+                </div>
+
+                <h3 class="fw-extrabold text-primary display-6 my-2" id="modalNominalDisplay">Rp 0</h3>
+                <p class="text-muted small mb-3" id="modalNominalSubtext">Nominal pembayaran sudah terkunci otomatis di QR Code ini.</p>
 
                 <!-- Canvas / QR Code Render Area -->
                 <div class="p-3 bg-white rounded border d-inline-block shadow-sm mb-3" id="modalQrCodeContainer"></div>
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
-                    <button class="btn btn-sm btn-primary rounded-pill px-3" id="btnDownloadQr">
+                    <button class="btn btn-sm btn-gradient-primary btn-pill px-3 shadow-xs" id="btnDownloadQr">
                         <i class="fa-solid fa-download me-1"></i> Simpan Gambar QRIS
                     </button>
                     <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnCopyQrisString">
@@ -323,8 +397,11 @@
                     <i class="fa-solid fa-circle-check me-1"></i> Konfirmasi Saya Sudah Bayar
                 </button>
             </div>
-            <div class="modal-footer justify-content-center">
-                <small class="text-muted">Buka aplikasi E-Wallet (BCA/GoPay/OVO/ShopeePay) lalu scan/upload gambar QRIS di atas.</small>
+            <div class="modal-footer justify-content-center bg-light bg-opacity-50 py-2.5">
+                <small class="text-muted text-center">
+                    <i class="fa-solid fa-mobile-screen-button me-1 text-primary"></i>
+                    Buka aplikasi <strong>Mobile Banking</strong> (BCA, Mandiri, BRI, BNI, dll) atau <strong>Dompet Digital / E-Wallet</strong> (GoPay, OVO, DANA, ShopeePay, dll) pilihanmu, lalu pindai atau unggah gambar QRIS di atas.
+                </small>
             </div>
         </div>
     </div>
@@ -344,8 +421,44 @@
                 <p class="text-muted small mb-3">Masukkan nama kamu untuk menandai bahwa item pesanan yang kamu pilih sudah dibayar.</p>
 
                 <div class="mb-3">
-                    <label class="form-label text-dark small fw-semibold">Nama Kamu (Pembayar)</label>
+                    <label class="form-label text-dark small fw-semibold">Nama Kamu (Pembayar) <span class="text-danger">*</span></label>
                     <input type="text" id="claimPayerNameInput" class="form-control" placeholder="Contoh: Fikri" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-dark small fw-semibold">Metode Pembayaran Yang Digunakan <span class="text-danger">*</span></label>
+                    <select id="claimPaymentMethodSelect" class="form-select">
+                        <option value="QRIS" selected>QRIS</option>
+                        <option value="CASH">Cash / Tunai</option>
+                        @if($allBanks->count() > 0)
+                            @foreach($allBanks as $bank)
+                                @php
+                                    $accHolder = !empty($bank->account_holder) ? ' - A.N. ' . $bank->account_holder : '';
+                                    $bankLabel = 'Transfer ' . $bank->bank_name . ' (' . $bank->account_number . $accHolder . ')';
+                                @endphp
+                                <option value="{{ $bankLabel }}">{{ $bankLabel }}</option>
+                            @endforeach
+                        @else
+                            <option value="Transfer Bank / E-Wallet Lainnya">Transfer Bank / E-Wallet Lainnya</option>
+                        @endif
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-dark small fw-semibold d-flex justify-content-between align-items-center mb-1">
+                        <span>Nominal Riil Yang Dibayarkan <span class="text-danger">*</span></span>
+                        <small class="text-muted" style="font-size: 0.72rem;">Minimal: <strong id="claimMinAmountDisplay" class="text-dark">Rp 0</strong></small>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted fw-bold">Rp</span>
+                        <input type="text" id="claimActualAmountInput" class="form-control fw-bold fs-5 text-primary" placeholder="0" required>
+                    </div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
+                        <i class="fa-solid fa-circle-info text-primary me-1"></i> Terisi otomatis dari total tagihan. Kamu bisa mengubah nominal jika mentransfer lebih.
+                    </small>
+                    <div class="alert alert-danger p-2 py-1.5 mt-2 mb-0 small d-none align-items-center gap-1.5 rounded-2" id="claimAmountValidationError">
+                        <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
+                        <span id="claimAmountValidationErrorText">Nominal riil dibayar tidak boleh lebih kecil dari total tagihan!</span>
+                    </div>
                 </div>
 
                 <div class="p-3 rounded bg-light border mb-3">
@@ -414,9 +527,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const roundUpDiffBadge = document.getElementById('roundUpDiffBadge');
     const roundUpHelperText = document.getElementById('roundUpHelperText');
 
-    const qrisModal = new bootstrap.Modal(document.getElementById('qrisModal'));
-    const claimModal = new bootstrap.Modal(document.getElementById('claimModal'));
-    
+    const qrisModalEl = document.getElementById('qrisModal');
+    const qrisModal = qrisModalEl ? new bootstrap.Modal(qrisModalEl) : null;
+
+    const claimModalEl = document.getElementById('claimModal');
+    const claimModal = claimModalEl ? new bootstrap.Modal(claimModalEl) : null;
+
     const modalMerchantName = document.getElementById('modalMerchantName');
     const modalNominalDisplay = document.getElementById('modalNominalDisplay');
     const modalRoundUpNote = document.getElementById('modalRoundUpNote');
@@ -553,7 +669,86 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleRoundUp.addEventListener('change', recalculateParticipantSummary);
     }
 
-    // Process Dynamic QRIS
+    const modalToggleRoundUp = document.getElementById('modalToggleRoundUp');
+    const modalRoundUpBadge = document.getElementById('modalRoundUpBadge');
+    const modalRoundUpHelperText = document.getElementById('modalRoundUpHelperText');
+
+    async function fetchAndRenderQris(isRoundUp) {
+        const selection = getSelectedItemsData();
+        if (Object.keys(selection.items).length === 0) {
+            return;
+        }
+
+        modalQrCodeContainer.innerHTML = '<div class="py-4 px-3 text-muted"><span class="spinner-border spinner-border-sm me-2 text-primary"></span>Memproses QRIS...</div>';
+
+        try {
+            const response = await fetch(`/b/${billSlug}/qris`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    items: selection.items,
+                    round_up: isRoundUp
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.dynamic_qris_payload) {
+                currentQrisPayload = data.dynamic_qris_payload;
+                modalMerchantName.innerText = data.merchant_name || 'Merchant';
+                modalNominalDisplay.innerText = formatRupiah(data.total_payable);
+
+                if (modalToggleRoundUp) {
+                    modalToggleRoundUp.checked = isRoundUp;
+                }
+
+                if (data.round_up_extra > 0 && isRoundUp) {
+                    if (modalRoundUpBadge) {
+                        modalRoundUpBadge.classList.remove('d-none');
+                        modalRoundUpBadge.innerText = '+Rp ' + data.round_up_extra.toLocaleString('id-ID');
+                    }
+                    if (modalRoundUpHelperText) {
+                        modalRoundUpHelperText.innerHTML = `Dibulatkan dari <strong>${formatRupiah(data.exact_payable)}</strong> (+${formatRupiah(data.round_up_extra)} tip/terima kasih)`;
+                    }
+                } else {
+                    if (modalRoundUpBadge) {
+                        modalRoundUpBadge.classList.add('d-none');
+                    }
+                    if (modalRoundUpHelperText) {
+                        modalRoundUpHelperText.innerHTML = `Lebihkan sedikit nominal transfer sebagai tanda terima kasih / tip ke <strong>${escapeHtml("{{ $bill->host_name }}")}</strong>.`;
+                    }
+                }
+
+                // Render QR Code
+                modalQrCodeContainer.innerHTML = '';
+                new QRCode(modalQrCodeContainer, {
+                    text: data.dynamic_qris_payload,
+                    width: 240,
+                    height: 240,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } else {
+                alert('Gagal meng-generate QRIS dinamis. Pastikan QRIS statis valid.');
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan saat memproses QRIS.');
+        }
+    }
+
+    if (modalToggleRoundUp) {
+        modalToggleRoundUp.addEventListener('change', async function() {
+            if (toggleRoundUp) {
+                toggleRoundUp.checked = this.checked;
+                recalculateParticipantSummary();
+            }
+            await fetchAndRenderQris(this.checked);
+        });
+    }
+
+    // Process Dynamic QRIS Button
     if (btnProcessQris) {
         btnProcessQris.addEventListener('click', async function() {
             const selection = getSelectedItemsData();
@@ -565,69 +760,79 @@ document.addEventListener('DOMContentLoaded', function() {
             btnProcessQris.disabled = true;
             btnProcessQris.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menggenerate QRIS Dinamis...';
 
-            try {
-                const response = await fetch(`/b/${billSlug}/qris`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        items: selection.items,
-                        round_up: selection.isRoundUp
-                    })
-                });
+            await fetchAndRenderQris(toggleRoundUp ? toggleRoundUp.checked : false);
 
-                const data = await response.json();
-                btnProcessQris.disabled = false;
-                btnProcessQris.innerHTML = '<i class="fa-solid fa-qrcode me-2"></i> Bayar via Dynamic QRIS';
+            btnProcessQris.disabled = false;
+            btnProcessQris.innerHTML = '<i class="fa-solid fa-qrcode me-2"></i> Bayar via Dynamic QRIS';
+            qrisModal.show();
+        });
+    }
 
-                if (data.success && data.dynamic_qris_payload) {
-                    currentQrisPayload = data.dynamic_qris_payload;
-                    modalMerchantName.innerText = data.merchant_name || 'Merchant';
-                    modalNominalDisplay.innerText = formatRupiah(data.total_payable);
+    const claimPaymentMethodSelect = document.getElementById('claimPaymentMethodSelect');
+    const claimActualAmountInput = document.getElementById('claimActualAmountInput');
+    const claimMinAmountDisplay = document.getElementById('claimMinAmountDisplay');
+    const claimAmountValidationError = document.getElementById('claimAmountValidationError');
+    const claimAmountValidationErrorText = document.getElementById('claimAmountValidationErrorText');
 
-                    if (data.round_up_extra > 0) {
-                        modalRoundUpNote.classList.remove('d-none');
-                    } else {
-                        modalRoundUpNote.classList.add('d-none');
-                    }
+    function validateClaimActualAmount() {
+        if (!claimActualAmountInput) return true;
 
-                    // Render QR Code
-                    modalQrCodeContainer.innerHTML = '';
-                    new QRCode(modalQrCodeContainer, {
-                        text: data.dynamic_qris_payload,
-                        width: 240,
-                        height: 240,
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
+        const enteredVal = parseRawNumber(claimActualAmountInput.value);
+        const minAmount = parseFloat(claimActualAmountInput.dataset.minAmount) || 0;
 
-                    qrisModal.show();
-                } else {
-                    alert('Gagal meng-generate QRIS dinamis. Pastikan QRIS statis valid.');
-                }
-            } catch (err) {
-                btnProcessQris.disabled = false;
-                btnProcessQris.innerHTML = '<i class="fa-solid fa-qrcode me-2"></i> Bayar via Dynamic QRIS';
-                alert('Terjadi kesalahan saat memproses QRIS.');
-            }
+        if (enteredVal < minAmount) {
+            claimAmountValidationError.classList.remove('d-none');
+            claimAmountValidationError.classList.add('d-flex');
+            claimAmountValidationErrorText.innerText = `Nominal riil dibayar (${formatRupiah(enteredVal)}) tidak boleh kurang dari total tagihan (${formatRupiah(minAmount)}).`;
+            claimActualAmountInput.classList.add('is-invalid');
+            btnSubmitClaim.disabled = true;
+            return false;
+        } else {
+            claimAmountValidationError.classList.add('d-none');
+            claimAmountValidationError.classList.remove('d-flex');
+            claimActualAmountInput.classList.remove('is-invalid');
+            btnSubmitClaim.disabled = false;
+            return true;
+        }
+    }
+
+    if (claimActualAmountInput) {
+        claimActualAmountInput.addEventListener('input', function() {
+            const raw = parseRawNumber(this.value);
+            this.value = raw ? formatThousand(raw) : '';
+            validateClaimActualAmount();
         });
     }
 
     // Open Claim Modal Handlers
-    btnTriggerClaimModal.addEventListener('click', openClaimModal);
-    if (btnOpenClaimFromModal) {
-        btnOpenClaimFromModal.addEventListener('click', function() {
-            qrisModal.hide();
+    if (btnTriggerClaimModal) {
+        btnTriggerClaimModal.addEventListener('click', function() {
             openClaimModal();
         });
     }
 
-    function openClaimModal() {
+    if (btnOpenClaimFromModal) {
+        btnOpenClaimFromModal.addEventListener('click', function() {
+            if (qrisModal) {
+                qrisModal.hide();
+            }
+            openClaimModal('QRIS');
+        });
+    }
+
+    function openClaimModal(defaultMethod = null) {
         const selection = getSelectedItemsData();
         if (Object.keys(selection.items).length === 0) {
             alert('Silakan pilih minimal 1 item pesanan kamu terlebih dahulu!');
             return;
+        }
+
+        if (claimPaymentMethodSelect) {
+            if (defaultMethod) {
+                claimPaymentMethodSelect.value = defaultMethod;
+            } else if (!claimPaymentMethodSelect.value) {
+                claimPaymentMethodSelect.value = 'QRIS';
+            }
         }
 
         let html = '<ul class="mb-0 ps-3 text-muted">';
@@ -636,103 +841,150 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         html += '</ul>';
 
-        claimItemsSummaryList.innerHTML = html;
-
-        if (selection.isRoundUp && selection.roundUpExtra > 0) {
-            claimRoundUpRow.classList.remove('d-none');
-            claimRoundUpRow.classList.add('d-flex');
-            claimRoundUpAmount.innerText = '+Rp ' + selection.roundUpExtra.toLocaleString('id-ID');
-        } else {
-            claimRoundUpRow.classList.add('d-none');
-            claimRoundUpRow.classList.remove('d-flex');
+        if (claimItemsSummaryList) {
+            claimItemsSummaryList.innerHTML = html;
         }
 
-        claimTotalDisplay.innerText = formatRupiah(selection.totalPayable);
+        if (claimRoundUpRow && claimRoundUpAmount) {
+            if (selection.isRoundUp && selection.roundUpExtra > 0) {
+                claimRoundUpRow.classList.remove('d-none');
+                claimRoundUpRow.classList.add('d-flex');
+                claimRoundUpAmount.innerText = '+Rp ' + selection.roundUpExtra.toLocaleString('id-ID');
+            } else {
+                claimRoundUpRow.classList.add('d-none');
+                claimRoundUpRow.classList.remove('d-flex');
+            }
+        }
 
-        claimModal.show();
+        if (claimTotalDisplay) {
+            claimTotalDisplay.innerText = formatRupiah(selection.totalPayable);
+        }
+
+        // Autofill actual amount & set minimum required threshold
+        const minTargetAmount = selection.exactPayable || selection.totalPayable;
+        if (claimMinAmountDisplay) {
+            claimMinAmountDisplay.innerText = formatRupiah(minTargetAmount);
+        }
+        if (claimActualAmountInput) {
+            claimActualAmountInput.dataset.minAmount = minTargetAmount;
+            claimActualAmountInput.value = formatThousand(selection.totalPayable);
+            validateClaimActualAmount();
+        }
+
+        if (claimModal) {
+            claimModal.show();
+        }
     }
 
     // Submit Claim
-    btnSubmitClaim.addEventListener('click', async function() {
-        const payerName = claimPayerNameInput.value.trim();
-        if (!payerName) {
-            alert('Harap masukkan Nama Kamu!');
-            claimPayerNameInput.focus();
-            return;
-        }
-
-        const selection = getSelectedItemsData();
-        if (Object.keys(selection.items).length === 0) {
-            alert('Tidak ada item yang dipilih!');
-            return;
-        }
-
-        btnSubmitClaim.disabled = true;
-        btnSubmitClaim.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan...';
-
-        try {
-            const response = await fetch(`/b/${billSlug}/claim`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    payer_name: payerName,
-                    items: selection.items,
-                    round_up: selection.isRoundUp
-                })
-            });
-
-            const data = await response.json();
-            btnSubmitClaim.disabled = false;
-            btnSubmitClaim.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Simpan Konfirmasi Pembayaran';
-
-            if (data.success) {
-                alert(data.message);
-                claimModal.hide();
-                window.location.reload();
-            } else {
-                alert(data.message || 'Gagal menyimpan klaim pembayaran.');
+    if (btnSubmitClaim) {
+        btnSubmitClaim.addEventListener('click', async function() {
+            const payerName = claimPayerNameInput ? claimPayerNameInput.value.trim() : '';
+            if (!payerName) {
+                alert('Harap masukkan Nama Kamu!');
+                if (claimPayerNameInput) claimPayerNameInput.focus();
+                return;
             }
-        } catch (err) {
-            btnSubmitClaim.disabled = false;
-            btnSubmitClaim.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Simpan Konfirmasi Pembayaran';
-            alert('Terjadi kesalahan jaringan saat menyimpan klaim.');
-        }
-    });
+
+            if (!validateClaimActualAmount()) {
+                if (claimActualAmountInput) claimActualAmountInput.focus();
+                return;
+            }
+
+            const paymentMethod = claimPaymentMethodSelect ? claimPaymentMethodSelect.value : 'QRIS';
+            const actualAmount = claimActualAmountInput ? parseRawNumber(claimActualAmountInput.value) : 0;
+
+            const selection = getSelectedItemsData();
+            if (Object.keys(selection.items).length === 0) {
+                alert('Tidak ada item yang dipilih!');
+                return;
+            }
+
+            btnSubmitClaim.disabled = true;
+            btnSubmitClaim.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan...';
+
+            try {
+                const response = await fetch(`/b/${billSlug}/claim`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        payer_name: payerName,
+                        payment_method: paymentMethod,
+                        actual_amount: actualAmount,
+                        items: selection.items,
+                        round_up: selection.isRoundUp
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Gagal menyimpan klaim.');
+                    btnSubmitClaim.disabled = false;
+                    btnSubmitClaim.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Simpan Konfirmasi Pembayaran';
+                }
+            } catch (err) {
+                alert('Terjadi kesalahan jaringan.');
+                btnSubmitClaim.disabled = false;
+                btnSubmitClaim.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Simpan Konfirmasi Pembayaran';
+            }
+        });
+    }
 
     // Download QR Image
-    btnDownloadQr.addEventListener('click', function() {
-        const qrCanvas = modalQrCodeContainer.querySelector('canvas');
-        const qrImg = modalQrCodeContainer.querySelector('img');
+    if (btnDownloadQr) {
+        btnDownloadQr.addEventListener('click', function() {
+            if (!modalQrCodeContainer) return;
+            const qrCanvas = modalQrCodeContainer.querySelector('canvas');
+            const qrImg = modalQrCodeContainer.querySelector('img');
 
-        let dataUrl = '';
-        if (qrCanvas) {
-            dataUrl = qrCanvas.toDataURL('image/png');
-        } else if (qrImg) {
-            dataUrl = qrImg.src;
-        }
+            let dataUrl = '';
+            if (qrCanvas) {
+                dataUrl = qrCanvas.toDataURL('image/png');
+            } else if (qrImg) {
+                dataUrl = qrImg.src;
+            }
 
-        if (dataUrl) {
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = `QRIS_PayMe_${billSlug}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else {
-            alert('Gambar QR Code tidak tersedia.');
-        }
-    });
+            if (dataUrl) {
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `QRIS_PayMe_${billSlug}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert('Gambar QR Code tidak tersedia.');
+            }
+        });
+    }
 
     // Copy QRIS String
-    btnCopyQrisString.addEventListener('click', function() {
-        if (currentQrisPayload) {
-            navigator.clipboard.writeText(currentQrisPayload);
-            alert('String QRIS berhasil disalin!');
-        }
-    });
+    if (btnCopyQrisString) {
+        btnCopyQrisString.addEventListener('click', function() {
+            if (currentQrisPayload) {
+                navigator.clipboard.writeText(currentQrisPayload);
+                alert('String QRIS berhasil disalin!');
+            }
+        });
+    }
+
+    function parseRawNumber(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        const digits = String(val).replace(/\D/g, '');
+        if (!digits) return 0;
+        return parseInt(digits, 10) || 0;
+    }
+
+    function formatThousand(val) {
+        if (val === null || val === undefined || val === '') return '';
+        const digits = String(val).replace(/\D/g, '');
+        if (!digits) return '';
+        return parseInt(digits, 10).toLocaleString('id-ID');
+    }
 
     function formatRupiah(num) {
         return new Intl.NumberFormat('id-ID', {

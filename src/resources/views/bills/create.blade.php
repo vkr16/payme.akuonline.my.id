@@ -118,7 +118,7 @@
                             </select>
                         </div>
 
-                        <label for="receiptFileInput" class="btn btn-sm btn-primary rounded-pill px-3 mb-0 cursor-pointer d-flex align-items-center gap-1 shadow-sm">
+                        <label for="receiptFileInput" class="btn btn-sm btn-gradient-primary btn-pill px-3 mb-0 cursor-pointer d-flex align-items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                             <span>Pindai Struk via AI Vision</span>
                             <input type="file" name="receipt_images[]" id="receiptFileInput" class="d-none" accept="image/*" multiple>
@@ -212,7 +212,7 @@
                 <div class="card-body p-3 p-md-4 d-none" id="bankFieldsContainer">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <p class="text-muted small mb-0">Tambahkan opsi transfer rekening bank atau dompet digital (seperti BCA, Mandiri, GoPay, OVO, ShopeePay, dll).</p>
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 d-flex align-items-center gap-1" id="btnAddBankRow">
+                        <button type="button" class="btn btn-sm btn-gradient-primary btn-pill px-3 d-flex align-items-center gap-1.5 shadow-sm" id="btnAddBankRow">
                             <i class="fa-solid fa-plus"></i>
                             <span>Tambah Rekening</span>
                         </button>
@@ -226,12 +226,98 @@
 
             <!-- SUBMIT ACTION -->
             <div class="d-flex justify-content-end mb-5">
-                <button type="submit" class="btn btn-gradient-primary btn-lg btn-pill w-100 w-sm-auto px-5 py-3 shadow-md d-flex align-items-center justify-content-center gap-2.5 fw-bold fs-6">
+                <button type="button" class="btn btn-gradient-primary btn-lg btn-pill w-100 w-sm-auto px-5 py-3 shadow-md d-flex align-items-center justify-content-center gap-2.5 fw-bold fs-6" id="btnOpenConfirmModal">
                     <i class="fa-solid fa-paper-plane"></i>
                     <span>Simpan & Buat Link Patungan</span>
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- CONFIRMATION MODAL BEFORE BILL CREATION -->
+<div class="modal fade" id="confirmBillModal" tabindex="-1" aria-labelledby="confirmBillModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-modal border-0">
+            <div class="modal-header border-bottom border-light py-3">
+                <h5 class="modal-title fw-bold text-dark fs-6 d-flex align-items-center" id="confirmBillModalLabel">
+                    <i class="fa-solid fa-clipboard-check text-primary me-2 fs-5"></i>
+                    <span>Konfirmasi Target Tagihan Patungan</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-primary bg-primary bg-opacity-10 border border-primary border-opacity-25 text-dark rounded-3 mb-3 small d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-primary fs-5 flex-shrink-0"></i>
+                    <div>Mohon periksa kembali total nominal dan rincian item sebelum membuat tagihan patungan.</div>
+                </div>
+
+                <!-- Host & Bill Title Summary -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="p-2.5 p-sm-3 bg-white rounded-3 border">
+                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Penggalang (Host)</small>
+                            <h6 class="fw-bold text-dark mb-0 text-truncate" id="confirmHostName">-</h6>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2.5 p-sm-3 bg-white rounded-3 border">
+                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Nama Pesanan</small>
+                            <h6 class="fw-bold text-dark mb-0 text-truncate" id="confirmBillTitle">-</h6>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Preview List -->
+                <div class="card border mb-3">
+                    <div class="card-header bg-light py-2 px-3 fw-semibold small text-muted d-flex justify-content-between">
+                        <span>Daftar Menu (<span id="confirmItemCount">0</span> item)</span>
+                        <span>Total Nominal</span>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 160px; overflow-y: auto;">
+                        <ul class="list-group list-group-flush small" id="confirmItemsList">
+                            <!-- Populated via JS -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Price Breakdown & Grand Total -->
+                <div class="p-3 rounded-3 bg-light border">
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted">
+                        <span>Subtotal Item:</span>
+                        <span class="fw-semibold text-dark" id="confirmItemsSubtotal">Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted" id="confirmDeliveryFeeRow">
+                        <span>Ongkos Kirim:</span>
+                        <span class="fw-semibold text-dark" id="confirmDeliveryFee">Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted" id="confirmServiceFeeRow">
+                        <span>Biaya Layanan / Admin:</span>
+                        <span class="fw-semibold text-dark" id="confirmServiceFee">Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2 small text-muted" id="confirmDiscountRow">
+                        <span>Diskon Promo:</span>
+                        <span class="fw-semibold text-danger" id="confirmDiscount">-Rp 0</span>
+                    </div>
+                    <hr class="my-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold text-dark d-block">TOTAL TARGET TAGIHAN</span>
+                            <small class="text-muted" style="font-size: 0.72rem;">Nominal yang akan dibagi ke anggota</small>
+                        </div>
+                        <span class="fw-extrabold text-primary fs-4" id="confirmGrandTotal">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light py-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary btn-pill px-4" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-pen me-1"></i> Cek Kembali
+                </button>
+                <button type="button" class="btn btn-gradient-primary btn-pill px-4 shadow-sm" id="btnFinalSubmit">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Ya, Buat Tagihan Sekarang
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
@@ -716,7 +802,92 @@ document.addEventListener('DOMContentLoaded', function() {
         displayGrandTotal.innerText = formatRupiah(grandTotal);
     }
 
-    // On Form Submit: strip formatting (dots) so backend receives clean integers
+    // Confirmation Modal Trigger
+    const btnOpenConfirmModal = document.getElementById('btnOpenConfirmModal');
+    const btnFinalSubmit = document.getElementById('btnFinalSubmit');
+    const confirmBillModalEl = document.getElementById('confirmBillModal');
+    const confirmBillModal = confirmBillModalEl ? new bootstrap.Modal(confirmBillModalEl) : null;
+
+    if (btnOpenConfirmModal) {
+        btnOpenConfirmModal.addEventListener('click', function() {
+            // First check standard HTML form validity (required fields: host_name, title, etc)
+            if (!billForm.checkValidity()) {
+                billForm.reportValidity();
+                return;
+            }
+
+            const rows = itemsContainer.querySelectorAll('.item-row');
+            if (rows.length === 0) {
+                alert('Mohon tambahkan minimal 1 item pesanan sebelum membuat tagihan.');
+                return;
+            }
+
+            // Extract Host and Title
+            const hostName = billForm.querySelector('input[name="host_name"]').value.trim() || '-';
+            const title = billForm.querySelector('input[name="title"]').value.trim() || '-';
+
+            document.getElementById('confirmHostName').innerText = hostName;
+            document.getElementById('confirmBillTitle').innerText = title;
+
+            // Populate Items list
+            const confirmItemsList = document.getElementById('confirmItemsList');
+            confirmItemsList.innerHTML = '';
+            let itemsSubtotal = 0;
+            let itemCount = 0;
+
+            rows.forEach(row => {
+                const name = row.querySelector('.item-name').value.trim() || 'Item';
+                const qty = parseInt(row.querySelector('.item-qty').value) || 0;
+                const price = parseRawNumber(row.querySelector('.item-price').value);
+                const lineTotal = qty * price;
+                itemsSubtotal += lineTotal;
+                itemCount += qty;
+
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center py-2 px-3';
+                li.innerHTML = `
+                    <div>
+                        <span class="fw-semibold text-dark">${escapeHtml(name)}</span>
+                        <small class="text-muted ms-1">(${qty}x @ ${formatRupiah(price)})</small>
+                    </div>
+                    <span class="fw-semibold text-dark">${formatRupiah(lineTotal)}</span>
+                `;
+                confirmItemsList.appendChild(li);
+            });
+
+            document.getElementById('confirmItemCount').innerText = itemCount;
+            document.getElementById('confirmItemsSubtotal').innerText = formatRupiah(itemsSubtotal);
+
+            // Additional Fees & Discounts
+            const deliveryFee = parseRawNumber(inputDeliveryFee.value);
+            const serviceFee = parseRawNumber(inputServiceFee.value);
+            const discount = parseRawNumber(inputDiscount.value);
+
+            document.getElementById('confirmDeliveryFee').innerText = formatRupiah(deliveryFee);
+            document.getElementById('confirmServiceFee').innerText = formatRupiah(serviceFee);
+            document.getElementById('confirmDiscount').innerText = '-' + formatRupiah(discount);
+
+            const grandTotal = Math.max(0, itemsSubtotal + deliveryFee + serviceFee - discount);
+            document.getElementById('confirmGrandTotal').innerText = formatRupiah(grandTotal);
+
+            // Show Confirmation Modal
+            if (confirmBillModal) {
+                confirmBillModal.show();
+            }
+        });
+    }
+
+    if (btnFinalSubmit) {
+        btnFinalSubmit.addEventListener('click', function() {
+            // Strip dots formatting so backend receives clean raw numbers
+            document.querySelectorAll('.currency-input').forEach(input => {
+                input.value = parseRawNumber(input.value);
+            });
+            billForm.submit();
+        });
+    }
+
+    // On Form Submit fallback
     billForm.addEventListener('submit', function() {
         document.querySelectorAll('.currency-input').forEach(input => {
             input.value = parseRawNumber(input.value);

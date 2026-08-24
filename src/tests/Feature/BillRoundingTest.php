@@ -91,4 +91,75 @@ class BillRoundingTest extends TestCase
             'amount' => 22000,
         ]);
     }
+
+    public function test_claim_payment_with_custom_actual_amount(): void
+    {
+        $bill = Bill::create([
+            'title' => 'Kopi Sore',
+            'host_name' => 'Host Budi',
+            'slug' => 'roundslug3',
+            'delivery_fee' => 3800,
+        ]);
+
+        $item = $bill->items()->create([
+            'name' => 'Kopi Susu',
+            'qty' => 1,
+            'price' => 15000,
+        ]);
+
+        // Exact = 15000 + 3800 = 18800
+        // Custom input = 20000
+        $resClaim = $this->postJson('/b/' . $bill->slug . '/claim', [
+            'payer_name' => 'Siti',
+            'payment_method' => 'CASH',
+            'actual_amount' => 20000,
+            'items' => [$item->id => 1],
+        ]);
+
+        $resClaim->assertStatus(200);
+        $resClaim->assertJson([
+            'success' => true,
+            'amount' => 20000,
+        ]);
+
+        $this->assertDatabaseHas('bill_claims', [
+            'bill_id' => $bill->id,
+            'payer_name' => 'Siti',
+            'payment_method' => 'CASH',
+            'amount' => 20000,
+        ]);
+
+        $claim = $bill->claims()->first();
+        $this->assertEquals(1200, $claim->surplus);
+        $this->assertEquals(1200, $bill->fresh()->total_surplus);
+    }
+
+    public function test_claim_payment_fails_if_actual_amount_less_than_exact_payable(): void
+    {
+        $bill = Bill::create([
+            'title' => 'Makan Malam',
+            'host_name' => 'Host Budi',
+            'slug' => 'roundslug4',
+            'delivery_fee' => 5000,
+        ]);
+
+        $item = $bill->items()->create([
+            'name' => 'Steak',
+            'qty' => 1,
+            'price' => 50000,
+        ]);
+
+        // Exact = 55000
+        // User inputs 40000 (< 55000)
+        $resClaim = $this->postJson('/b/' . $bill->slug . '/claim', [
+            'payer_name' => 'Budi',
+            'actual_amount' => 40000,
+            'items' => [$item->id => 1],
+        ]);
+
+        $resClaim->assertStatus(422);
+        $resClaim->assertJson([
+            'success' => false,
+        ]);
+    }
 }

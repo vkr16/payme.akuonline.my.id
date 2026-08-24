@@ -284,7 +284,8 @@ class BillController extends Controller
 
         $validated = $request->validate([
             'payer_name' => 'required|string|max:100',
-            'payment_method' => 'nullable|string|max:50',
+            'payment_method' => 'nullable|string|max:255',
+            'actual_amount' => 'nullable|numeric|min:0',
             'round_up' => 'nullable|boolean',
             'items' => 'required|array|min:1',
             'items.*' => 'required|integer|min:1',
@@ -327,9 +328,22 @@ class BillController extends Controller
         }
 
         $exactPaid = round($itemsSubtotal + $feeShare);
+        if ($exactPaid < 0) {
+            $exactPaid = 0;
+        }
+
         $totalPaid = $exactPaid;
 
-        if ($roundUp && $exactPaid > 0) {
+        if ($request->filled('actual_amount')) {
+            $customActual = (float) $request->input('actual_amount');
+            if ($customActual < $exactPaid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nominal riil yang dibayarkan tidak boleh lebih kecil dari total tagihan (Rp ' . number_format($exactPaid, 0, ',', '.') . ').',
+                ], 422);
+            }
+            $totalPaid = $customActual;
+        } elseif ($roundUp && $exactPaid > 0) {
             $totalPaid = (int) (ceil($exactPaid / 1000) * 1000);
         }
 

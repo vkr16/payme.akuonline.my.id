@@ -93,4 +93,9 @@ class Bill extends Model
 
         return min(100, round(($this->total_paid / $this->total_amount) * 100, 1));
     }
+
+    public function getTotalSurplusAttribute(): float
+    {
+        return (float) $this->claims->sum(fn ($c) => $c->surplus);
+    }
 }
