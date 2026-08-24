@@ -372,15 +372,15 @@
                 </div>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-1.5 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
                     <i class="fa-solid fa-shield-halved text-primary"></i>
                     <span class="d-none d-sm-inline">Privasi & Retensi Data</span>
                 </button>
-                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-3 shadow-xs d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#coffeeModal">
+                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-3 shadow-xs d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#coffeeModal">
                     <i class="fa-solid fa-mug-hot text-dark"></i>
                     <span class="d-none d-md-inline">Traktir Kopi</span>
                 </button>
-                <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-sm btn-pill px-3.5 d-flex align-items-center gap-1.5">
+                <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-sm btn-pill px-3.5 d-flex align-items-center gap-2">
                     <i class="fa-solid fa-plus"></i>
                     <span>Buat Patungan</span>
                 </a>
@@ -418,7 +418,7 @@
         <div class="container">
             <p class="mb-2 small font-medium">&copy; {{ date('Y') }} PayMe &bull; Solusi Patungan QRIS Statis ke Dinamis</p>
             <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
-                <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Kebijakan Privasi & Retensi Data (Auto-Delete 00:00 WIB)</span>
                 </button>
@@ -477,38 +477,52 @@
                         </div>
                     </div>
 
-                    <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i> Ketentuan Retensi & Penghapusan Otomatis Data</h6>
+                    <h6 class="fw-bold text-dark mb-2.5"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i> Ketentuan Retensi & Penghapusan Otomatis Data</h6>
                     <div class="card border mb-3 shadow-xs bg-white">
                         <div class="card-body p-3">
-                            <ul class="list-group list-group-flush border-0">
-                                <li class="list-group-item bg-transparent px-0 py-2 border-bottom">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div>
-                                            <strong class="text-dark"><i class="fa-solid fa-circle-check text-success me-1"></i> Tagihan Lunas</strong>
-                                            <div class="small text-muted">Seluruh tagihan yang sudah terbayar lunas oleh anggota</div>
+                            <div class="vstack gap-3">
+                                <!-- Item 1: Tagihan Lunas -->
+                                <div class="p-3 rounded-3 bg-light bg-opacity-50 border border-success border-opacity-25">
+                                    <div class="gap-2 mb-2">
+                                        <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-circle-check text-success"></i>
+                                            <span>Tagihan Lunas</span>
                                         </div>
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-semibold">Disimpan Max {{ config('payme.retention.paid_days', 3) }} Hari Kalender</span>
-                                    </div>
-                                </li>
-                                <li class="list-group-item bg-transparent px-0 py-2 border-bottom">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div>
-                                            <strong class="text-dark"><i class="fa-solid fa-clock text-warning me-1"></i> Tagihan Belum Lunas</strong>
-                                            <div class="small text-muted">Tagihan aktif yang belum terselesaikan sepenuhnya</div>
+                                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-semibold" style="font-size: 0.78rem;">
+                                            Disimpan Max {{ config('payme.retention.paid_days', 3) }} Hari Kalender
                                         </div>
-                                        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 px-2.5 py-1.5 fw-semibold">Disimpan Max {{ config('payme.retention.unpaid_days', 7) }} Hari Kalender</span>
                                     </div>
-                                </li>
-                                <li class="list-group-item bg-transparent px-0 py-2">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div>
-                                            <strong class="text-dark"><i class="fa-solid fa-trash-can text-danger me-1"></i> Jadwal Pembersihan Otomatis</strong>
-                                            <div class="small text-muted">Pembersihan permanen data dari server</div>
+                                    <p class="small text-muted mb-0 lh-sm">Seluruh tagihan yang sudah terbayar lunas oleh anggota.</p>
+                                </div>
+
+                                <!-- Item 2: Tagihan Belum Lunas -->
+                                <div class="p-3 rounded-3 bg-light bg-opacity-50 border border-warning border-opacity-30">
+                                    <div class="gap-2 mb-2">
+                                        <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-clock text-warning"></i>
+                                            <span>Tagihan Belum Lunas</span>
                                         </div>
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1.5 fw-semibold">Pukul 00:00 WIB Hari Selanjutnya</span>
+                                        <div class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 px-2.5 py-1.5 fw-semibold" style="font-size: 0.78rem;">
+                                            Disimpan Max {{ config('payme.retention.unpaid_days', 7) }} Hari Kalender
+                                        </div>
                                     </div>
-                                </li>
-                            </ul>
+                                    <p class="small text-muted mb-0 lh-sm">Tagihan aktif yang belum terselesaikan sepenuhnya.</p>
+                                </div>
+
+                                <!-- Item 3: Jadwal Pembersihan -->
+                                <div class="p-3 rounded-3 bg-light bg-opacity-50 border border-danger border-opacity-25">
+                                    <div class="gap-2 mb-2">
+                                        <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                                            <i class="fa-solid fa-trash-can text-danger"></i>
+                                            <span>Jadwal Pembersihan Otomatis</span>
+                                        </div>
+                                        <div class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1.5 fw-semibold" style="font-size: 0.78rem;">
+                                            Pukul 00:00 WIB Hari Selanjutnya
+                                        </div>
+                                    </div>
+                                    <p class="small text-muted mb-0 lh-sm">Pembersihan dan penghapusan permanen seluruh data dari server.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

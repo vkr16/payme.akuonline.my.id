@@ -397,15 +397,19 @@ class BillController extends Controller
             $shouldDelete = false;
 
             if ($isPaid) {
-                // Paid bill: delete if last activity / created_at is older than 3 days
-                $lastActivity = $bill->claims->max('created_at') ?? $bill->updated_at ?? $bill->created_at;
-                if ($lastActivity && $lastActivity <= $paidThreshold) {
+                // Paid bill: delete if last activity / created_at is older than paidThreshold
+                $lastClaimDate = $bill->claims->max('created_at');
+                $lastActivityRaw = $lastClaimDate ?? $bill->updated_at ?? $bill->created_at;
+                $lastActivity = $lastActivityRaw ? \Carbon\Carbon::parse($lastActivityRaw) : null;
+
+                if ($lastActivity && $lastActivity->lte($paidThreshold)) {
                     $shouldDelete = true;
                     $paidBillsDeleted++;
                 }
             } else {
-                // Unpaid bill: delete if created_at is older than 7 days
-                if ($bill->created_at <= $unpaidThreshold) {
+                // Unpaid bill: delete if created_at is older than unpaidThreshold
+                $createdAt = $bill->created_at ? \Carbon\Carbon::parse($bill->created_at) : null;
+                if ($createdAt && $createdAt->lte($unpaidThreshold)) {
                     $shouldDelete = true;
                     $unpaidBillsDeleted++;
                 }
