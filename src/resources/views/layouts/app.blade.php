@@ -417,12 +417,7 @@
     <footer class="py-4 text-center text-muted border-top bg-white bg-opacity-50 mt-auto backdrop-blur">
         <div class="container">
             <p class="mb-2 small font-medium">&copy; {{ date('Y') }} PayMe &bull; Solusi Patungan QRIS Statis ke Dinamis</p>
-            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
-                <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    <span>Kebijakan Privasi & Retensi Data (Auto-Delete 00:00 WIB)</span>
-                </button>
-            </div>
+
             <p class="mb-0 small text-secondary">
                 Dikembangkan oleh <strong>Fikri M</strong> dari <strong>AkuOnline</strong> menggunakan <span class="text-primary fw-semibold"><i class="fa-solid fa-rocket me-1"></i>Antigravity</span>
             </p>
