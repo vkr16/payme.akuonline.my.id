@@ -31,10 +31,10 @@ class BillController extends Controller
             'receipt_image' => 'nullable|image|max:10240',
             'receipt_images' => 'nullable|array',
             'receipt_images.*' => 'image|max:10240',
-            'receipt_price_type' => 'nullable|string|in:auto,unit_price,total_price',
+            'receipt_price_type' => 'nullable|string|in:unit_price,total_price,auto',
         ]);
 
-        $priceType = $request->input('receipt_price_type', 'auto');
+        $priceType = $request->input('receipt_price_type', 'unit_price');
         $filePaths = [];
 
         if ($request->hasFile('receipt_images')) {
@@ -103,10 +103,12 @@ class BillController extends Controller
         $merchantName = null;
         $merchantCity = null;
 
-        if ($payload) {
+        if ($payload && $qrisService->isValidQris($payload)) {
             $merchantInfo = $qrisService->extractMerchantInfo($payload);
             $merchantName = $merchantInfo['merchant_name'];
             $merchantCity = $merchantInfo['merchant_city'];
+        } else {
+            $payload = null;
         }
 
         $bill = Bill::create([

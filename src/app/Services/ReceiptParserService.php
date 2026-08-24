@@ -10,7 +10,7 @@ class ReceiptParserService
     /**
      * Parse single receipt image using 9router AI Vision API.
      */
-    public function parseImage(string $filePath, string $priceType = 'auto'): array
+    public function parseImage(string $filePath, string $priceType = 'unit_price'): array
     {
         return $this->parseSingleImage($filePath, $priceType);
     }
@@ -18,7 +18,7 @@ class ReceiptParserService
     /**
      * Parse multiple receipt images (overlapping screenshots) safely by batching calls to avoid API timeouts.
      */
-    public function parseImages(array $filePaths, string $priceType = 'auto'): array
+    public function parseImages(array $filePaths, string $priceType = 'unit_price'): array
     {
         $validPaths = array_filter($filePaths, 'file_exists');
         if (empty($validPaths)) {
@@ -68,7 +68,7 @@ class ReceiptParserService
         // Deduplicate items extracted across multiple screenshot images
         $deduplicatedItems = $this->deduplicateItems($allRawItems);
 
-        // Perform Price Format Enforcing or Auto-Crosscheck
+        // Perform Price Format Enforcing
         $processed = $this->applyPriceFormatRules($deduplicatedItems, $priceType, $maxDeliveryFee, $maxServiceFee, $maxDiscount, $maxTotal);
 
         return [
@@ -87,7 +87,7 @@ class ReceiptParserService
     /**
      * Internal method to parse a single receipt image with user-selected price format mode.
      */
-    protected function parseSingleImage(string $filePath, string $priceType = 'auto'): array
+    protected function parseSingleImage(string $filePath, string $priceType = 'unit_price'): array
     {
         $apiKey = config('services.ninerouter.api_key', env('NINEROUTER_API_KEY', ''));
         $baseUrl = config('services.ninerouter.api_base', env('NINEROUTER_API_BASE', 'https://api.9router.com/v1'));
@@ -102,12 +102,11 @@ class ReceiptParserService
         $base64Image = 'data:' . $mimeType . ';base64,' . base64_encode($imageBytes);
 
         $priceInstruction = "";
-        if ($priceType === 'unit_price') {
-            $priceInstruction = "PETUNJUK USER (PENTING): Pengguna mengonfirmasi bahwa nominal yang tertera pada kolom harga di struk adalah HARGA SATUAN (Unit Price per 1 pcs). Ambil angka tersebut langsung sebagai field `price`.";
-        } elseif ($priceType === 'total_price') {
-            $priceInstruction = "PETUNJUK USER (PENTING): Pengguna mengonfirmasi bahwa nominal yang tertera pada kolom harga di struk adalah HARGA TOTAL KUANTITAS (Subtotal untuk `qty` barang tersebut). Kamu HARUS MEMBAGI nominal tersebut dengan `qty` (yaitu price_satuan = nominal / qty) agar field `price` pada JSON berisi HARGA SATUAN per 1 pcs.";
+        if ($priceType === 'total_price') {
+            $priceInstruction = "PETUNJUK USER (PENTING): Pengguna mengonfirmasi bahwa nominal yang tertera pada kolom harga di struk adalah TOTAL HARGA BARIS / TOTAL KUANTITAS (Subtotal untuk `qty` barang tersebut). Kamu HARUS MEMBAGI nominal tersebut dengan `qty` (yaitu price_satuan = nominal / qty) agar field `price` pada JSON berisi HARGA SATUAN per 1 pcs.";
         } else {
-            $priceInstruction = "EVALUASI OTOMATIS: Evaluasi apakah angka di kolom harga struk merupakan harga satuan atau harga total kuantitas. Field `price` pada JSON HARUS SELALU BERISI HARGA SATUAN per 1 pcs. Jika di struk tertulis 2x dan kolom harga 10.000 (total untuk 2 pcs), bagilah dengan 2 sehingga `price` = 5000.";
+            // Default: unit_price
+            $priceInstruction = "PETUNJUK USER (PENTING - DEFAULT): Pengguna mengonfirmasi bahwa nominal yang tertera pada kolom harga di struk adalah HARGA SATUAN (Unit Price per 1 pcs). Ambil angka tersebut langsung tanpa membaginya dengan `qty` sebagai field `price`.";
         }
 
         $prompt = <<<PROMPT
@@ -139,6 +138,8 @@ Aturan Tambahan:
 4. `discount` adalah total potongan harga / promo / voucher (0 jika tidak ada).
 5. Jangan sertakan item promo/diskon ke dalam list `items`, diskon masukkan ke field `discount`.
 6. Kembalikan format JSON murni tanpa markdown.
+7. PENTING: Sertakan seluruh varian rasa, tingkat gula (sugar level), tingkat es (less ice / normal ice), topping, ukuran, atau opsi catatan pesanan langsung ke dalam field `name` (contoh: 'Kopi Susu (Less Ice)', 'Kopi Susu (Normal Ice)', 'Ayam Geprek (Level 3)'). Jangan menghilangkan varian karena varian berbeda merupakan item pesanan terpisah.
+8. PENTING: Jika gambar struk terpotong/hanya menampilkan bagian atas atau tengah tanpa rincian total pembayaran di bagian bawah struk, isi field `total`: 0, `delivery_fee`: 0, `service_fee`: 0, `discount`: 0 (JANGAN menebak atau menghitung total sendiri jika baris Total tidak tercantum pada gambar).
 PROMPT;
 
         try {
@@ -287,7 +288,7 @@ PROMPT;
         }
 
         if ($priceType === 'total_price') {
-            // User explicitly requested Total Price mode: Force divide by qty for multi-qty items
+            // User selected Total Price mode (Harga Struk = Harga Total Item): Divide line total by qty
             $corrected = [];
             $wasAdjusted = false;
             foreach ($items as $item) {
@@ -303,21 +304,16 @@ PROMPT;
             return [
                 'items' => $corrected,
                 'auto_corrected' => $wasAdjusted,
-                'auto_corrected_message' => 'Format diterapkan (Harga Total Kuantitas): Harga item secara otomatis dibagi dengan jumlah kuantitas untuk menghasilkan harga satuan.',
+                'auto_corrected_message' => 'Format diterapkan (Harga Struk = Harga Total Item): Nominal baris item secara otomatis dibagi dengan jumlah kuantitas untuk menghasilkan harga satuan.',
             ];
         }
 
-        if ($priceType === 'unit_price') {
-            // User explicitly requested Unit Price mode: Do not alter prices
-            return [
-                'items' => $items,
-                'auto_corrected' => false,
-                'auto_corrected_message' => '',
-            ];
-        }
-
-        // Default 'auto' mode: Run mathematical crosscheck
-        return $this->crosscheckAndCorrectItems($items, $deliveryFee, $serviceFee, $discount, $total);
+        // Default (Harga Struk = Harga Satuan): Keep unit prices as-is
+        return [
+            'items' => $items,
+            'auto_corrected' => false,
+            'auto_corrected_message' => '',
+        ];
     }
 
     /**
@@ -384,21 +380,60 @@ PROMPT;
 
     /**
      * PHP-level secondary deduplication safeguard for multi-screenshot overlap.
+     * Accurately compares item name (preserving variants like Less Ice, Sugar Level, Level Pedas)
+     * while ignoring OCR noise like punctuation and 'Catatan:' prefixes, combined with exact unit price.
      */
     protected function deduplicateItems(array $items): array
     {
         $unique = [];
         foreach ($items as $item) {
-            $normalizedName = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', $item['name'])));
-            $normalizedKey = $normalizedName . '_' . (int) $item['price'];
+            $rawName = (string) ($item['name'] ?? '');
+            $cleanName = trim(preg_replace('/\s+/', ' ', $rawName));
+            if ($cleanName === '') {
+                continue;
+            }
+
+            $price = (float) ($item['price'] ?? 0);
+            $normalizedKey = $this->normalizeItemKey($cleanName, $price);
 
             if (isset($unique[$normalizedKey])) {
-                $unique[$normalizedKey]['qty'] = max($unique[$normalizedKey]['qty'], $item['qty']);
+                $unique[$normalizedKey]['qty'] = max((int) $unique[$normalizedKey]['qty'], (int) ($item['qty'] ?? 1));
+                if (mb_strlen($cleanName) > mb_strlen($unique[$normalizedKey]['name'])) {
+                    $unique[$normalizedKey]['name'] = $cleanName;
+                }
             } else {
-                $unique[$normalizedKey] = $item;
+                $unique[$normalizedKey] = [
+                    'name' => $cleanName,
+                    'qty' => max(1, (int) ($item['qty'] ?? 1)),
+                    'price' => $price,
+                ];
             }
         }
         return array_values($unique);
+    }
+
+    /**
+     * Standardize comparison key for item deduplication:
+     * - Preserves unique variant words (e.g. Less Ice, Normal Ice, Level 1, Level 3)
+     * - Normalizes metadata label prefixes (e.g. "Catatan:", "Note:", "Opsi:")
+     * - Standardizes unit abbreviations (e.g. 350 gram -> 350g, 20 pcs -> 20pcs, 200 ml -> 200ml)
+     * - Strips outer brackets and formatting punctuation so "(Catatan: X)" matches "Catatan: X"
+     */
+    protected function normalizeItemKey(string $name, float $price): string
+    {
+        $str = mb_strtolower($name, 'UTF-8');
+        // Remove common metadata noise prefixes
+        $str = preg_replace('/\b(catatan|notes?|opsi)\s*:\s*/iu', ' ', $str);
+        // Standardize common unit abbreviations
+        $str = preg_replace('/(\d+)\s*(gram|gr)\b/iu', '${1}g', $str);
+        $str = preg_replace('/(\d+)\s*pcs\b/iu', '${1}pcs', $str);
+        $str = preg_replace('/(\d+)\s*ml\b/iu', '${1}ml', $str);
+        // Remove formatting punctuation/brackets/quotes/hyphens
+        $str = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $str);
+        // Collapse whitespace
+        $str = trim(preg_replace('/\s+/', ' ', $str));
+
+        return $str . '___' . (int) round($price);
     }
 
     private function emptyFallback(string $message): array

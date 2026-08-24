@@ -32,4 +32,22 @@ class QrisServiceTest extends TestCase
         // Check standard 4-char CRC16 at the end
         $this->assertEquals(4, strlen(substr($dynamicQris, -4)));
     }
+
+    public function test_is_valid_qris_returns_true_for_valid_qris()
+    {
+        $service = new QrisService();
+        $validQris = "00020101021126580016ID.CO.QRIS.WWW011893600914000005115102155915LEO STORE CAFE6007JAKARTA5802ID6304A1B2";
+
+        $this->assertTrue($service->isValidQris($validQris));
+    }
+
+    public function test_is_valid_qris_returns_false_for_invalid_payload()
+    {
+        $service = new QrisService();
+
+        $this->assertFalse($service->isValidQris(''));
+        $this->assertFalse($service->isValidQris('https://example.com/not-qris'));
+        $this->assertFalse($service->isValidQris('WIFI:S:MyWifi;T:WPA;P:secret;;'));
+        $this->assertFalse($service->isValidQris('000201010211')); // Too short / missing merchant & country code
+    }
 }

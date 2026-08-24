@@ -5,6 +5,34 @@ namespace App\Services;
 class QrisService
 {
     /**
+     * Validate if string is a standard EMVCo QRIS payload.
+     */
+    public function isValidQris(string $qrisCode): bool
+    {
+        $code = trim($qrisCode);
+        if (strlen($code) < 30) {
+            return false;
+        }
+
+        // Must start with 000201 (Payload format indicator)
+        if (!str_starts_with($code, '000201')) {
+            return false;
+        }
+
+        // Must contain Indonesian country code tag (5802ID) or IDR currency tag (5303360)
+        if (!str_contains($code, '5802ID') && !str_contains($code, '5303360')) {
+            return false;
+        }
+
+        // Must contain Merchant Name tag (Tag 59)
+        if (!preg_match('/59(\d{2})([^\d]{2,})/', $code)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Extract Merchant Info from raw static EMVCo QRIS string.
      */
     public function extractMerchantInfo(string $qrisCode): array

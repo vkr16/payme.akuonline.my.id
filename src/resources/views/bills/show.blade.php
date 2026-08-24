@@ -70,24 +70,38 @@
                 @endphp
 
                 @if($allBanks->count() > 0)
-                    <div class="p-3 rounded bg-light border text-start mt-3">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="badge bg-warning text-dark">
-                                <i class="fa-solid fa-building-columns me-1"></i> Opsi Transfer Bank & E-Wallet ({{ $allBanks->count() }})
+                    <div class="p-3 rounded-3 bg-light border text-start mt-3">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 mb-3">
+                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 px-2.5 py-1.5 fw-semibold">
+                                <i class="fa-solid fa-building-columns text-warning me-1"></i> Opsi Transfer Bank & Dompet Digital ({{ $allBanks->count() }})
                             </span>
-                            <small class="text-muted">Pilih opsi transfer kesukaanmu</small>
+                            <small class="text-muted">Salin nomor rekening untuk transfer manual</small>
                         </div>
 
                         <div class="vstack gap-2">
                             @foreach($allBanks as $bank)
-                                <div class="p-2 rounded bg-white border d-flex align-items-center justify-content-between gap-2">
-                                    <div>
-                                        <h6 class="fw-bold text-dark mb-0">{{ $bank->bank_name }} - {{ $bank->account_number }}</h6>
-                                        <small class="text-muted">A.N: {{ $bank->account_holder ?: '-' }}</small>
+                                <div class="p-3 rounded-3 bg-white border shadow-xs">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                        <div>
+                                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 small fw-bold">
+                                                    {{ $bank->bank_name }}
+                                                </span>
+                                                <span class="fw-bold text-dark fs-6 user-select-all font-monospace">
+                                                    {{ $bank->account_number }}
+                                                </span>
+                                            </div>
+                                            <div class="text-muted small">
+                                                <span>Atas Nama:</span> <strong class="text-dark">{{ $bank->account_holder ?: '-' }}</strong>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 btn-copy-bank d-inline-flex align-items-center gap-1 shadow-xs" data-acc="{{ $bank->account_number }}" data-bank="{{ $bank->bank_name }}">
+                                                <i class="fa-solid fa-copy"></i>
+                                                <span>Salin Rekening</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-warning text-dark rounded-2 btn-copy-bank" data-acc="{{ $bank->account_number }}" data-bank="{{ $bank->bank_name }}">
-                                        <i class="fa-solid fa-copy me-1"></i> Salin Rekening
-                                    </button>
                                 </div>
                             @endforeach
                         </div>
@@ -98,51 +112,61 @@
 
         <!-- Participant Item Selection -->
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 fw-bold text-primary fs-6">
-                    <i class="fa-solid fa-utensils me-2"></i> Pilih Item Pesanan Kamu
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-utensils text-primary"></i>
+                    <span>Pilih Menu Pesanan Kamu</span>
                 </h5>
-                <span class="text-muted small">Tentukan item yang ingin kamu bayar</span>
+                <small class="text-muted d-block mt-1">Tentukan porsi atau item yang ingin kamu bayar</small>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-3 p-md-4">
                 <div class="vstack gap-3" id="participantItemsList">
                     @foreach($bill->items as $item)
                         @php
                             $remaining = $item->remaining_qty;
                         @endphp
-                        <div class="p-3 rounded bg-white border d-flex flex-wrap align-items-center justify-content-between gap-3 item-claim-card {{ $remaining === 0 ? 'bg-light opacity-75' : '' }}" data-item-id="{{ $item->id }}" data-item-price="{{ $item->price }}" data-item-max="{{ $remaining }}" data-item-name="{{ $item->name }}">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center gap-2">
-                                    <h6 class="fw-bold text-dark mb-0">{{ $item->name }}</h6>
-                                    @if($remaining === 0)
-                                        <span class="badge bg-success">
-                                            <i class="fa-solid fa-circle-check me-1"></i> Lunas ({{ $item->qty }}/{{ $item->qty }})
-                                        </span>
-                                    @endif
+                        <div class="p-3 rounded-3 bg-white border item-claim-card {{ $remaining === 0 ? 'bg-light opacity-75' : '' }}" data-item-id="{{ $item->id }}" data-item-price="{{ $item->price }}" data-item-max="{{ $remaining }}" data-item-name="{{ $item->name }}">
+                            <!-- Top row: Item Name, Status badge, and Unit Price info -->
+                            <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold text-dark mb-1 fs-6">{{ $item->name }}</h6>
+                                    <div class="d-flex flex-wrap align-items-center gap-2 text-muted small">
+                                        <span class="fw-semibold text-dark">Rp {{ number_format($item->price, 0, ',', '.') }} / item</span>
+                                        <span>&bull;</span>
+                                        @if($remaining > 0)
+                                            <span class="text-primary fw-medium">Tersisa: <strong>{{ $remaining }}</strong> dari {{ $item->qty }}</span>
+                                        @else
+                                            <span class="text-muted">Semua {{ $item->qty }} item sudah lunas</span>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 text-muted small mt-1">
-                                    <span>Rp {{ number_format($item->price, 0, ',', '.') }} / item</span>
-                                    <span>&bull;</span>
-                                    @if($remaining > 0)
-                                        <span class="text-primary fw-semibold">Belum dibayar: <strong>{{ $remaining }}</strong> dari {{ $item->qty }}</span>
-                                    @else
-                                        <span class="text-muted">Semua {{ $item->qty }} item sudah lunas</span>
-                                    @endif
-                                </div>
+                                @if($remaining === 0)
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 small flex-shrink-0">
+                                        <i class="fa-solid fa-circle-check me-1"></i> Lunas ({{ $item->qty }}/{{ $item->qty }})
+                                    </span>
+                                @endif
                             </div>
 
-                            <div class="d-flex align-items-center gap-3">
-                                @if($remaining > 0)
-                                    <div class="input-group input-group-sm" style="width: 110px;">
-                                        <button type="button" class="btn btn-outline-secondary btn-claim-minus"><i class="fa-solid fa-minus"></i></button>
-                                        <input type="number" class="form-control text-center claim-qty" value="0" min="0" max="{{ $remaining }}" readonly>
-                                        <button type="button" class="btn btn-outline-secondary btn-claim-plus"><i class="fa-solid fa-plus"></i></button>
-                                    </div>
-                                @else
-                                    <span class="badge bg-secondary px-3 py-2">Lunas</span>
-                                @endif
-                                <div class="text-end" style="min-width: 90px;">
-                                    <span class="fw-bold text-dark item-claim-total">Rp 0</span>
+                            <!-- Bottom row: Quantity input stepper (always below text) & calculated subtotal -->
+                            <div class="d-flex align-items-center justify-content-between pt-2 border-top gap-2">
+                                <div>
+                                    @if($remaining > 0)
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-muted small d-none d-sm-inline">Jumlah kamu:</span>
+                                            <div class="input-group input-group-sm" style="width: 120px;">
+                                                <button type="button" class="btn btn-outline-secondary btn-claim-minus stepper-btn" aria-label="Kurang kuantitas"><i class="fa-solid fa-minus"></i></button>
+                                                <input type="number" class="form-control text-center claim-qty fw-bold" value="0" min="0" max="{{ $remaining }}" readonly>
+                                                <button type="button" class="btn btn-outline-secondary btn-claim-plus stepper-btn" aria-label="Tambah kuantitas"><i class="fa-solid fa-plus"></i></button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2">Semua Lunas</span>
+                                    @endif
+                                </div>
+
+                                <div class="text-end">
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">Subtotal Item</small>
+                                    <span class="fw-bold text-dark item-claim-total fs-6">Rp 0</span>
                                 </div>
                             </div>
                         </div>
@@ -212,11 +236,12 @@
 
         <!-- List Pembayar yang Sudah Bayar -->
         <div class="card shadow-sm border-0 mb-5">
-            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 fw-bold text-dark fs-6">
-                    <i class="fa-solid fa-users text-success me-2"></i> Riwayat Pembayaran ({{ $bill->claims->count() }})
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-users text-success"></i>
+                    <span>Riwayat Pembayaran ({{ $bill->claims->count() }})</span>
                 </h5>
-                <span class="text-muted small">Daftar anggota yang sudah konfirmasi bayar</span>
+                <small class="text-muted d-block mt-1">Daftar anggota yang sudah konfirmasi bayar</small>
             </div>
             <div class="card-body p-4">
                 @if($bill->claims->count() > 0)
