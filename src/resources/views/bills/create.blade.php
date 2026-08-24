@@ -255,13 +255,13 @@
                 <!-- Host & Bill Title Summary -->
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <div class="p-2.5 p-sm-3 bg-white rounded-3 border">
+                        <div class="p-3 p-sm-3 bg-white rounded-3 border">
                             <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Penggalang (Host)</small>
                             <h6 class="fw-bold text-dark mb-0 text-truncate" id="confirmHostName">-</h6>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="p-2.5 p-sm-3 bg-white rounded-3 border">
+                        <div class="p-3 p-sm-3 bg-white rounded-3 border">
                             <small class="text-muted d-block mb-1" style="font-size: 0.75rem;">Nama Pesanan</small>
                             <h6 class="fw-bold text-dark mb-0 text-truncate" id="confirmBillTitle">-</h6>
                         </div>

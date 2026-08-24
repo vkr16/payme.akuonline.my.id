@@ -74,7 +74,7 @@
                 <!-- Share Link & Receipt Action Box -->
                 <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mb-2">
                     @if($bill->receipt_image_path)
-                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
                             <i class="fa-solid fa-file-invoice me-1"></i> Lihat Struk Asli
                         </button>
                     @endif
@@ -82,7 +82,7 @@
                         <i class="fa-solid fa-link me-1"></i> Salin Link Patungan
                     </button>
                     <a href="https://api.whatsapp.com/send?text={{ urlencode('Yuk bayar patungan ' . $bill->title . ' ditalangin ' . $bill->host_name . ' lewat link ini: ' . $shareUrl) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
-                        <i class="fa-brands fa-whatsapp me-1"></i> Bagikan WA
+                        <i class="fa-brands fa-whatsapp me-1"></i> Bagikan via WhatsApp
                     </a>
                 </div>
 
@@ -350,11 +350,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center p-4">
-                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 fs-6">
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 fs-6">
                         <i class="fa-solid fa-store me-1"></i> Merchant: <strong id="modalMerchantName">-</strong>
-                    </span>
-                    <span class="badge bg-light text-muted border px-2.5 py-1 small">Dynamic QRIS</span>
+                    </div>
+                    <div class="badge bg-light text-muted border px-2.5 py-1 small">Dynamic QRIS</div>
                 </div>
 
                 <!-- OPSI BULATKAN KE ATAS (SWITCH DI DALAM POPUP MODAL) -->
@@ -453,7 +453,7 @@
                         <input type="text" id="claimActualAmountInput" class="form-control fw-bold fs-5 text-primary" placeholder="0" required>
                     </div>
                     <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
-                        <i class="fa-solid fa-circle-info text-primary me-1"></i> Terisi otomatis dari total tagihan. Kamu bisa mengubah nominal jika mentransfer lebih.
+                        <i class="fa-solid fa-circle-primary text-primary me-1"></i> Terisi otomatis dari total tagihan. Kamu bisa mengubah nominal jika mentransfer lebih.
                     </small>
                     <div class="alert alert-danger p-2 py-1.5 mt-2 mb-0 small d-none align-items-center gap-1.5 rounded-2" id="claimAmountValidationError">
                         <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
@@ -489,7 +489,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold text-dark fs-6" id="receiptModalLabel">
-                    <i class="fa-solid fa-receipt text-info me-2"></i> Foto Struk / Nota Pesanan Asli
+                    <i class="fa-solid fa-receipt text-primary me-2"></i> Foto Struk / Nota Pesanan Asli
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -500,7 +500,7 @@
             </div>
             <div class="modal-footer justify-content-between">
                 <small class="text-muted"><i class="fa-solid fa-eye me-1"></i> Transparansi total: foto struk diunggah langsung oleh Host ({{ $bill->host_name }}).</small>
-                <a href="{{ route('bills.receipt', ['slug' => $bill->slug], false) }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
+                <a href="{{ route('bills.receipt', ['slug' => $bill->slug], false) }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
                     <i class="fa-solid fa-up-right-from-square me-1"></i> Buka Gambar Penuh
                 </a>
             </div>

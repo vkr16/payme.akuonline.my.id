@@ -35,6 +35,13 @@
             --payme-teal: #0d9488;
             --payme-indigo: #4f46e5;
             --payme-bg: #f8fafc;
+
+            /* STANDARDIZED BORDER RADIUS DESIGN TOKENS SCALE */
+            --radius-card: 1.25rem;       /* 20px - Cards, Modals, Major Containers, Dropzone */
+            --radius-btn: 9999px;         /* Pill - All Buttons (Primary, Secondary, Stepper, Actions) */
+            --radius-input: 0.75rem;      /* 12px - Form Controls, Selects, Input-group texts */
+            --radius-badge: 9999px;      /* Pill - All Status Badges, Labels, Tags */
+            --radius-box: 0.75rem;        /* 12px - Inner Alert boxes, Item Cards, List Rows */
         }
 
         body {
@@ -72,9 +79,9 @@
             transform: scale(1.05);
         }
 
-        /* Glassmorphism Card Styling */
+        /* 1. CARDS, GLASS CARDS, MODALS & CONTAINERS */
         .card, .glass-card {
-            border-radius: 1.25rem;
+            border-radius: var(--radius-card) !important;
             border: 1px solid rgba(226, 232, 240, 0.8);
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(16px) saturate(180%);
@@ -86,40 +93,44 @@
         .card-header {
             background: rgba(255, 255, 255, 0.6);
             border-bottom: 1px solid rgba(241, 245, 249, 0.9);
-            border-top-left-radius: 1.25rem !important;
-            border-top-right-radius: 1.25rem !important;
+            border-top-left-radius: var(--radius-card) !important;
+            border-top-right-radius: var(--radius-card) !important;
         }
 
-        /* Modern Gradient Buttons */
-        .btn-gradient-primary {
-            background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
-            border: none;
-            color: #ffffff;
-            font-weight: 600;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        /* GLASSMORPHISM MODAL POPUPS */
+        .modal-content {
+            border-radius: var(--radius-card) !important;
+            border: 1px solid rgba(255, 255, 255, 0.7) !important;
+            background: rgba(255, 255, 255, 0.86) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
         }
 
-        .btn-gradient-primary:hover {
-            background: linear-gradient(135deg, #0369a1 0%, #0f766e 100%);
-            color: #ffffff;
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
-            transform: translateY(-1px);
+        .modal-backdrop.show {
+            background-color: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
         }
 
-        .btn-pill {
-            border-radius: 9999px;
+        .modal-header {
+            background: rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+            border-top-left-radius: var(--radius-card) !important;
+            border-top-right-radius: var(--radius-card) !important;
         }
 
-        .btn-rounded {
-            border-radius: 0.75rem;
+        .modal-footer {
+            background: rgba(248, 250, 252, 0.5);
+            border-top: 1px solid rgba(226, 232, 240, 0.7);
+            border-bottom-left-radius: var(--radius-card) !important;
+            border-bottom-right-radius: var(--radius-card) !important;
         }
 
-        /* Interactive Upload Dropzone with Glass */
         .upload-dropzone {
             border: 2px dashed #cbd5e1;
             background: rgba(248, 250, 252, 0.8);
-            border-radius: 1rem;
+            border-radius: var(--radius-card) !important;
             padding: 2rem 1.25rem;
             text-align: center;
             cursor: pointer;
@@ -136,10 +147,31 @@
             transform: scale(1.005);
         }
 
-        /* Form input enhancements */
+        /* 2. BUTTONS - Standardized Pill Scale */
+        .btn, .btn-pill, .btn-rounded {
+            border-radius: var(--radius-btn) !important;
+        }
+
+        .btn-gradient-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-gradient-primary:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #0f766e 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* 3. FORM INPUT FIELDS & SELECTS */
         .form-control, .form-select {
             border-color: #cbd5e1;
-            border-radius: 0.75rem;
+            border-radius: var(--radius-input) !important;
             padding: 0.65rem 0.95rem;
             font-size: 0.95rem;
             color: #0f172a;
@@ -151,6 +183,54 @@
             border-color: var(--payme-primary);
             box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.15);
             background-color: #ffffff;
+        }
+
+        /* COMBINED ELEMENTS & INPUT GROUPS */
+        .input-group {
+            border-radius: var(--radius-input);
+        }
+
+        .input-group > .form-control,
+        .input-group > .form-select,
+        .input-group > .input-group-text,
+        .input-group > .btn {
+            border-radius: 0 !important;
+        }
+
+        .input-group > :first-child,
+        .input-group > .form-control:first-child,
+        .input-group > .form-select:first-child,
+        .input-group > .input-group-text:first-child,
+        .input-group > .btn:first-child {
+            border-top-left-radius: var(--radius-input) !important;
+            border-bottom-left-radius: var(--radius-input) !important;
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+
+        .input-group > :last-child,
+        .input-group > .form-control:last-child,
+        .input-group > .form-select:last-child,
+        .input-group > .input-group-text:last-child,
+        .input-group > .btn:last-child {
+            border-top-right-radius: var(--radius-input) !important;
+            border-bottom-right-radius: var(--radius-input) !important;
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+        }
+
+        .input-group > :not(:first-child):not(:last-child) {
+            border-radius: 0 !important;
+        }
+
+        /* 4. BADGES - Standardized Pill Scale */
+        .badge {
+            border-radius: var(--radius-badge) !important;
+        }
+
+        /* 5. INNER BOXES, ALERTS & ITEM CARDS */
+        .alert, .rounded-3, .item-claim-card {
+            border-radius: var(--radius-box) !important;
         }
 
         /* Watermark LUNAS Rubber Stamp Overlay */
