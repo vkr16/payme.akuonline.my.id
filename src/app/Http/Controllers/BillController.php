@@ -369,4 +369,87 @@ class BillController extends Controller
             'amount' => $totalPaid,
         ]);
     }
+
+    /**
+     * Clear & delete all expired bills and associated files based on data retention rules.
+     * Rules:
+     * 1. Paid bills older than 3 calendar days (> 3 days).
+     * 2. Unpaid/active bills older than 7 calendar days (> 7 days).
+     */
+    public function cleanRetention(): JsonResponse
+    {
+        $paidDays = (int) config('payme.retention.paid_days', 3);
+        $unpaidDays = (int) config('payme.retention.unpaid_days', 7);
+
+        $paidThreshold = now()->subDays($paidDays);
+        $unpaidThreshold = now()->subDays($unpaidDays);
+
+        $bills = Bill::with(['claims.claimItems', 'items'])->get();
+
+        $paidBillsDeleted = 0;
+        $unpaidBillsDeleted = 0;
+        $claimsDeleted = 0;
+        $itemsDeleted = 0;
+        $receiptFilesDeleted = 0;
+
+        foreach ($bills as $bill) {
+            $isPaid = ($bill->unpaid_amount <= 0 && $bill->items->count() > 0);
+            $shouldDelete = false;
+
+            if ($isPaid) {
+                // Paid bill: delete if last activity / created_at is older than 3 days
+                $lastActivity = $bill->claims->max('created_at') ?? $bill->updated_at ?? $bill->created_at;
+                if ($lastActivity && $lastActivity <= $paidThreshold) {
+                    $shouldDelete = true;
+                    $paidBillsDeleted++;
+                }
+            } else {
+                // Unpaid bill: delete if created_at is older than 7 days
+                if ($bill->created_at <= $unpaidThreshold) {
+                    $shouldDelete = true;
+                    $unpaidBillsDeleted++;
+                }
+            }
+
+            if ($shouldDelete) {
+                // Delete files if exist
+                if ($bill->receipt_image_path && Storage::disk('public')->exists($bill->receipt_image_path)) {
+                    Storage::disk('public')->delete($bill->receipt_image_path);
+                    $receiptFilesDeleted++;
+                }
+                if ($bill->qris_image_path && Storage::disk('public')->exists($bill->qris_image_path)) {
+                    Storage::disk('public')->delete($bill->qris_image_path);
+                }
+
+                // Delete claims & claim items
+                foreach ($bill->claims as $claim) {
+                    $claim->claimItems()->delete();
+                    $claim->delete();
+                    $claimsDeleted++;
+                }
+
+                // Delete items
+                $itemsCount = $bill->items->count();
+                $bill->items()->delete();
+                $itemsDeleted += $itemsCount;
+
+                // Delete bill
+                $bill->delete();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembersihan retensi data berhasil dijalankan.',
+            'execution_time' => now()->toDateTimeString(),
+            'deleted_summary' => [
+                'paid_bills_deleted' => $paidBillsDeleted,
+                'unpaid_bills_deleted' => $unpaidBillsDeleted,
+                'total_bills_deleted' => $paidBillsDeleted + $unpaidBillsDeleted,
+                'claims_deleted' => $claimsDeleted,
+                'items_deleted' => $itemsDeleted,
+                'receipt_files_deleted' => $receiptFilesDeleted,
+            ]
+        ]);
+    }
 }

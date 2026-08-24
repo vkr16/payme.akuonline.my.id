@@ -15,3 +15,5 @@ Route::get('/b/{slug}', [BillController::class, 'show'])->name('bills.show');
 Route::get('/b/{slug}/receipt', [BillController::class, 'receiptImage'])->name('bills.receipt');
 Route::post('/b/{slug}/qris', [BillController::class, 'generateDynamicQris'])->name('bills.qris');
 Route::post('/b/{slug}/claim', [BillController::class, 'claimPayment'])->name('bills.claim');
+Route::get('/clean-retention', [BillController::class, 'cleanRetention'])->name('bills.clean-retention');
+

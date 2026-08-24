@@ -15,6 +15,22 @@
             <p class="text-muted mb-0">Bagi tagihan pesanan secara adil dan transparan dengan konversi QRIS statis ke dinamis serta pembagian proporsional.</p>
         </div>
 
+        <!-- PRIVACY & DATA RETENTION CTA BANNER (TOP POSITION WITH P-3 PADDING) -->
+        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-xs mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2.5 bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="fa-solid fa-user-shield fs-6"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-0.5 fs-6">Jaminan Privasi & Retensi Data Otomatis</h6>
+                    <p class="text-muted small mb-0" style="font-size: 0.78rem;">Data disimpan max {{ config('payme.retention.paid_days', 3) }} hari (lunas) / {{ config('payme.retention.unpaid_days', 7) }} hari (aktif) & dihapus permanen pukul 00:00 WIB.</p>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 fw-semibold flex-shrink-0 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                <i class="fa-solid fa-shield-halved me-1"></i> Pelajari Retensi
+            </button>
+        </div>
+
         <form action="{{ route('bills.store') }}" method="POST" enctype="multipart/form-data" id="billForm">
             @csrf
 

@@ -243,7 +243,7 @@
             pointer-events: none;
             z-index: 10;
             user-select: none;
-            opacity: 0.22;
+            opacity: 0.4;
             max-width: 92vw;
             box-sizing: border-box;
         }
@@ -304,7 +304,7 @@
             }
             100% {
                 transform: scale(1) rotate(-14deg);
-                opacity: 0.22;
+                opacity: 0.4;
             }
         }
 
@@ -372,9 +372,13 @@
                 </div>
             </a>
             <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-1.5 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                    <i class="fa-solid fa-shield-halved text-primary"></i>
+                    <span class="d-none d-sm-inline">Privasi & Retensi Data</span>
+                </button>
                 <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-3 shadow-xs d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#coffeeModal">
                     <i class="fa-solid fa-mug-hot text-dark"></i>
-                    <span>Traktir Kopi</span>
+                    <span class="d-none d-md-inline">Traktir Kopi</span>
                 </button>
                 <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-sm btn-pill px-3.5 d-flex align-items-center gap-1.5">
                     <i class="fa-solid fa-plus"></i>
@@ -412,7 +416,13 @@
     <!-- Footer -->
     <footer class="py-4 text-center text-muted border-top bg-white bg-opacity-50 mt-auto backdrop-blur">
         <div class="container">
-            <p class="mb-1 small font-medium">&copy; {{ date('Y') }} PayMe &bull; Solusi Patungan QRIS Statis ke Dinamis</p>
+            <p class="mb-2 small font-medium">&copy; {{ date('Y') }} PayMe &bull; Solusi Patungan QRIS Statis ke Dinamis</p>
+            <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
+                <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Kebijakan Privasi & Retensi Data (Auto-Delete 00:00 WIB)</span>
+                </button>
+            </div>
             <p class="mb-0 small text-secondary">
                 Dikembangkan oleh <strong>Fikri M</strong> dari <strong>AkuOnline</strong> menggunakan <span class="text-primary fw-semibold"><i class="fa-solid fa-rocket me-1"></i>Antigravity</span>
             </p>
@@ -443,6 +453,74 @@
                 </div>
                 <div class="modal-footer justify-content-center border-0 pt-0 pb-4">
                     <button type="button" class="btn btn-sm btn-secondary btn-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRIVACY POLICY & DATA RETENTION MODAL -->
+    <div class="modal fade" id="privacyPolicyModal" tabindex="-1" aria-labelledby="privacyPolicyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-modal border-0">
+                <div class="modal-header border-bottom border-light py-3">
+                    <h5 class="modal-title fw-bold text-dark fs-6 d-flex align-items-center" id="privacyPolicyModalLabel">
+                        <i class="fa-solid fa-shield-halved text-primary me-2 fs-5"></i> Kebijakan Privasi & Masa Penyimpanan Data (Retensi)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-4 text-dark">
+                    <div class="p-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-4 mb-4 d-flex align-items-start gap-3">
+                        <i class="fa-solid fa-user-shield text-primary fs-3 flex-shrink-0 mt-1"></i>
+                        <div>
+                            <h6 class="fw-bold text-primary mb-1">Komitmen Privasi & Keamanan PayMe</h6>
+                            <p class="small text-muted mb-0">PayMe berkomitmen penuh untuk menjaga keamanan dan privasi data transaksi Anda. Kami tidak pernah menjual, menyewakan, atau membagikan informasi transaksi Anda kepada pihak ketiga mana pun.</p>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-clock-rotate-left me-2 text-warning"></i> Ketentuan Retensi & Penghapusan Otomatis Data</h6>
+                    <div class="card border mb-3 shadow-xs bg-white">
+                        <div class="card-body p-3">
+                            <ul class="list-group list-group-flush border-0">
+                                <li class="list-group-item bg-transparent px-0 py-2 border-bottom">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <strong class="text-dark"><i class="fa-solid fa-circle-check text-success me-1"></i> Tagihan Lunas</strong>
+                                            <div class="small text-muted">Seluruh tagihan yang sudah terbayar lunas oleh anggota</div>
+                                        </div>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-semibold">Disimpan Max {{ config('payme.retention.paid_days', 3) }} Hari Kalender</span>
+                                    </div>
+                                </li>
+                                <li class="list-group-item bg-transparent px-0 py-2 border-bottom">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <strong class="text-dark"><i class="fa-solid fa-clock text-warning me-1"></i> Tagihan Belum Lunas</strong>
+                                            <div class="small text-muted">Tagihan aktif yang belum terselesaikan sepenuhnya</div>
+                                        </div>
+                                        <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 px-2.5 py-1.5 fw-semibold">Disimpan Max {{ config('payme.retention.unpaid_days', 7) }} Hari Kalender</span>
+                                    </div>
+                                </li>
+                                <li class="list-group-item bg-transparent px-0 py-2">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <strong class="text-dark"><i class="fa-solid fa-trash-can text-danger me-1"></i> Jadwal Pembersihan Otomatis</strong>
+                                            <div class="small text-muted">Pembersihan permanen data dari server</div>
+                                        </div>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1.5 fw-semibold">Pukul 00:00 WIB Hari Selanjutnya</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 border">
+                        <p class="small text-muted mb-0">
+                            <i class="fa-solid fa-circle-info me-1 text-primary"></i>
+                            Setiap data tagihan yang telah mencapai masa batas retensi di atas akan secara otomatis <strong>dihapus permanen dari database pada pukul 00:00 WIB</strong> di hari berikutnya. Kami menyarankan Anda menyimpan atau melakukan screenshot bukti pembayaran jika diperlukan untuk arsip pribadi.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end border-0 pt-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-sm btn-primary btn-pill px-4" data-bs-dismiss="modal">Saya Mengerti</button>
                 </div>
             </div>
         </div>
