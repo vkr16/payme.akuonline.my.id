@@ -6,6 +6,39 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'PayMe - QRIS Split Bill Generator')</title>
 
+    @php
+        $defaultOgTitle = 'PayMe - Split Bill & Dynamic QRIS Generator';
+        $defaultOgDesc = 'Bagi tagihan pesanan secara adil dan transparan dengan konversi QRIS statis ke dinamis serta pembagian proporsional.';
+        $defaultOgImage = asset('images/qrlogo.png');
+        if (str_contains($defaultOgImage, ':///') || !str_contains($defaultOgImage, '://')) {
+            $baseUrl = rtrim(config('app.url', 'https://payme.akuonline.my.id'), '/');
+            $defaultOgImage = $baseUrl . '/images/qrlogo.png';
+        }
+    @endphp
+
+    <!-- Standard Primary Meta Tags -->
+    <meta name="title" content="@yield('meta_title', $defaultOgTitle)">
+    <meta name="description" content="@yield('meta_description', $defaultOgDesc)">
+
+    <!-- Open Graph / WhatsApp / Facebook Link Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PayMe Split Bill">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('meta_title', $defaultOgTitle)">
+    <meta property="og:description" content="@yield('meta_description', $defaultOgDesc)">
+    <meta property="og:image" content="@yield('meta_image', $defaultOgImage)">
+    <meta property="og:image:secure_url" content="@yield('meta_image', $defaultOgImage)">
+    <meta property="og:image:width" content="600">
+    <meta property="og:image:height" content="600">
+    <meta property="og:image:type" content="image/png">
+
+    <!-- Twitter Card Link Preview -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="@yield('meta_title', $defaultOgTitle)">
+    <meta name="twitter:description" content="@yield('meta_description', $defaultOgDesc)">
+    <meta name="twitter:image" content="@yield('meta_image', $defaultOgImage)">
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/qrlogo.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('images/qrlogo.png') }}">

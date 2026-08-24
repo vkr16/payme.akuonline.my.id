@@ -1,6 +1,20 @@
 @extends('layouts.app')
 
-@section('title', $bill->title . ' - PayMe Split Bill')
+@section('title', 'Patungan ' . $bill->title . ' - Ditalangin ' . $bill->host_name)
+@section('meta_title', 'Patungan "' . $bill->title . '" - Ditalangin oleh ' . $bill->host_name)
+@section('meta_description', 'Total Tagihan: Rp ' . number_format($bill->total_amount, 0, ',', '.') . ' (' . $bill->items->count() . ' item). Klik link ini untuk memilih pesanan kamu & konfirmasi bayar via QRIS Dinamis / Bank / Cash.')
+
+@php
+    $pageOgImage = asset('images/qrlogo.png');
+    if ($bill->receipt_image_path) {
+        $pageOgImage = route('bills.receipt', ['slug' => $bill->slug]);
+    }
+    if (str_contains($pageOgImage, ':///') || !str_contains($pageOgImage, '://')) {
+        $baseUrl = rtrim(config('app.url', 'https://payme.akuonline.my.id'), '/');
+        $pageOgImage = $baseUrl . ($bill->receipt_image_path ? '/b/' . $bill->slug . '/receipt' : '/images/qrlogo.png');
+    }
+@endphp
+@section('meta_image', $pageOgImage)
 
 @section('content')
 <div class="row justify-content-center overflow-hidden">
