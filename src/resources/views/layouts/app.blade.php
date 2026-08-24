@@ -59,6 +59,7 @@
             -moz-osx-font-smoothing: grayscale;
             scrollbar-gutter: stable;
             overscroll-behavior: contain;
+            overflow-x: hidden;
         }
 
         /* Glassmorphism Navigation Bar */
@@ -242,19 +243,23 @@
             pointer-events: none;
             z-index: 10;
             user-select: none;
-            opacity: 0.3;
+            opacity: 0.22;
+            max-width: 92vw;
+            box-sizing: border-box;
         }
 
         .lunas-stamp-badge {
-            border: 8px double #053d96;
-            color: #070596;
-            padding: 1.25rem 3.5rem;
+            border: 8px double #059669;
+            color: #059669;
+            padding: 1.25rem 3rem;
             border-radius: 1.5rem;
             text-align: center;
             font-family: 'Plus Jakarta Sans', sans-serif;
             box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1);
             background: rgba(255, 255, 255, 0.5);
             animation: stampBounce 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .lunas-stamp-inner span {
@@ -266,6 +271,32 @@
             text-transform: uppercase;
         }
 
+        @media (max-width: 576px) {
+            .lunas-stamp-overlay {
+                top: 210px;
+                max-width: 95vw;
+            }
+
+            .lunas-stamp-badge {
+                padding: 0.75rem 1.25rem;
+                border-width: 5px;
+            }
+
+            .lunas-stamp-inner span {
+                font-size: 2.8rem;
+                letter-spacing: 6px;
+            }
+
+            .lunas-stamp-inner i {
+                font-size: 2.2rem !important;
+            }
+
+            .lunas-stamp-inner small {
+                font-size: 0.7rem !important;
+                letter-spacing: 2px !important;
+            }
+        }
+
         @keyframes stampBounce {
             0% {
                 transform: scale(2.5) rotate(-35deg);
@@ -273,7 +304,7 @@
             }
             100% {
                 transform: scale(1) rotate(-14deg);
-                opacity: 0.3;
+                opacity: 0.22;
             }
         }
 

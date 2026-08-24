@@ -3,8 +3,8 @@
 @section('title', $bill->title . ' - PayMe Split Bill')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-lg-8 position-relative">
+<div class="row justify-content-center overflow-hidden">
+    <div class="col-lg-8 position-relative overflow-hidden">
 
         @if($bill->unpaid_amount <= 0 && $bill->items->count() > 0)
             <!-- WATERMARK STAMP LUNAS -->
