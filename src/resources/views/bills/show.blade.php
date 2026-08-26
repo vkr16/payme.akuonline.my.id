@@ -73,7 +73,7 @@
                 @endif
 
                 <!-- Progress Bar Patungan -->
-                <div class="p-3 rounded bg-light border mb-3 text-start">
+                <div class="p-3 rounded-3 bg-light border mb-3 text-start">
                     <div class="d-flex justify-content-between align-items-center mb-2 small">
                         <span class="text-muted fw-semibold"><i class="fa-solid fa-chart-pie me-1 text-primary"></i> Progress Terkumpul</span>
                         <span class="fw-bold text-success">
@@ -91,6 +91,8 @@
                             <span class="fw-bold text-primary small">+Rp {{ number_format($bill->total_surplus, 0, ',', '.') }}</span>
                         </div>
                     @endif
+                </div>
+
                 @php
                     $shareUrl = route('bills.show', ['slug' => $bill->slug]);
                     if (str_contains($shareUrl, ':///') || !str_contains($shareUrl, '://')) {
@@ -100,16 +102,16 @@
                 @endphp
 
                 <!-- Share Link & Receipt Action Box -->
-                <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mb-2">
+                <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mb-3">
                     @if($bill->receipt_image_path)
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                        <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
                             <i class="fa-solid fa-file-invoice me-1"></i> Lihat Struk Asli
                         </button>
                     @endif
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnCopyShareLink">
+                    <button class="btn btn-sm btn-outline-secondary btn-pill px-3" id="btnCopyShareLink">
                         <i class="fa-solid fa-link me-1"></i> Salin Link Patungan
                     </button>
-                    <a href="https://api.whatsapp.com/send?text={{ urlencode('Yuk bayar patungan ' . $bill->title . ' ditalangin ' . $bill->host_name . ' lewat link ini: ' . $shareUrl) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+                    <a href="https://api.whatsapp.com/send?text={{ urlencode('Yuk bayar patungan ' . $bill->title . ' ditalangin ' . $bill->host_name . ' lewat link ini: ' . $shareUrl) }}" target="_blank" class="btn btn-sm btn-success btn-pill px-3">
                         <i class="fa-brands fa-whatsapp me-1"></i> Bagikan via WhatsApp
                     </a>
                 </div>
