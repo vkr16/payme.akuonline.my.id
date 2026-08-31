@@ -36,15 +36,15 @@
         <!-- PRIVACY & DATA RETENTION CTA BANNER CARD (VERY TOP POS WITH P-3 PADDING) -->
         <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-3 text-start mb-4 shadow-xs">
             <div class="d-flex align-items-center gap-3">
-                <div class="p-2.5 bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <div class="p-2 bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                     <i class="fa-solid fa-shield-halved fs-6"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold text-dark mb-0.5 fs-6">Jaminan Privasi & Retensi Data Otomatis</h6>
+                    <h6 class="fw-bold text-dark mb-1 fs-6">Jaminan Privasi & Retensi Data Otomatis</h6>
                     <p class="text-muted small mb-0" style="font-size: 0.78rem;">Data disimpan {{ config('payme.retention.paid_days', 3) }} hari (lunas) / {{ config('payme.retention.unpaid_days', 7) }} hari (aktif) & dihapus permanen pukul 00:00 WIB.</p>
                 </div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 py-1.5 fw-semibold flex-shrink-0 shadow-xs" style="font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+            <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3 py-1 fw-semibold flex-shrink-0 shadow-xs" style="font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
                 Pelajari Retensi
             </button>
         </div>
@@ -85,7 +85,7 @@
                     </div>
                     @if($bill->total_surplus > 0)
                         <div class="mt-2 pt-2 border-top border-light d-flex align-items-center justify-content-between">
-                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 small fw-semibold">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 small fw-semibold">
                                 <i class="fa-solid fa-heart text-danger me-1"></i> Total Tip Terkumpul:
                             </span>
                             <span class="fw-bold text-primary small">+Rp {{ number_format($bill->total_surplus, 0, ',', '.') }}</span>
@@ -130,7 +130,7 @@
                 @if($allBanks->count() > 0)
                     <div class="p-3 rounded-3 bg-light border text-start mt-3">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-1 mb-3">
-                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 px-2.5 py-1.5 fw-semibold">
+                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 px-3 py-1 fw-semibold">
                                 <i class="fa-solid fa-building-columns text-warning me-1"></i> Opsi Transfer Bank & Dompet Digital ({{ $allBanks->count() }})
                             </span>
                             <small class="text-muted">Salin nomor rekening untuk transfer manual</small>
@@ -154,7 +154,7 @@
                                             </div>
                                         </div>
                                         <div>
-                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 btn-copy-bank d-inline-flex align-items-center gap-1 shadow-xs" data-acc="{{ $bank->account_number }}" data-bank="{{ $bank->bank_name }}">
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 btn-copy-bank d-inline-flex align-items-center gap-1 shadow-xs" data-acc="{{ $bank->account_number }}" data-bank="{{ $bank->bank_name }}">
                                                 <i class="fa-solid fa-copy"></i>
                                                 <span>Salin Rekening</span>
                                             </button>
@@ -346,7 +346,7 @@
                                         <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
                                             <small class="text-muted fw-medium me-1">Item:</small>
                                             @foreach($claim->claimItems as $cItem)
-                                                <span class="badge bg-light text-dark border fw-normal py-1.5 px-2.5 mb-1 text-wrap text-start text-break mw-100" style="font-size: 0.78rem; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">
+                                                <span class="badge bg-light text-dark border fw-normal py-1 px-3 mb-1 text-wrap text-start text-break mw-100" style="font-size: 0.78rem; white-space: normal; word-break: break-word; overflow-wrap: anywhere;">
                                                     {{ $cItem->item->name ?? 'Item' }} <strong class="text-primary">({{ $cItem->qty }}x)</strong>
                                                 </span>
                                             @endforeach
@@ -381,10 +381,10 @@
             </div>
             <div class="modal-body text-center p-4">
                 <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1.5 fs-6">
+                    <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 fs-6">
                         <i class="fa-solid fa-store me-1"></i> Merchant: <strong id="modalMerchantName">-</strong>
                     </div>
-                    <div class="badge bg-light text-muted border px-2.5 py-1 small">Dynamic QRIS</div>
+                    <div class="badge bg-light text-muted border px-3 py-1 small">Dynamic QRIS</div>
                 </div>
 
                 <!-- OPSI BULATKAN KE ATAS (SWITCH DI DALAM POPUP MODAL) -->
@@ -427,7 +427,7 @@
                     <i class="fa-solid fa-circle-check me-1"></i> Konfirmasi Saya Sudah Bayar
                 </button>
             </div>
-            <div class="modal-footer justify-content-center bg-light bg-opacity-50 py-2.5">
+            <div class="modal-footer justify-content-center bg-light bg-opacity-50 py-2">
                 <small class="text-muted text-center">
                     <i class="fa-solid fa-mobile-screen-button me-1 text-primary"></i>
                     Buka aplikasi <strong>Mobile Banking</strong> (BCA, Mandiri, BRI, BNI, dll) atau <strong>Dompet Digital / E-Wallet</strong> (GoPay, OVO, DANA, ShopeePay, dll) pilihanmu, lalu pindai atau unggah gambar QRIS di atas.
@@ -485,7 +485,7 @@
                     <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
                         <i class="fa-solid fa-circle-primary text-primary me-1"></i> Terisi otomatis dari total tagihan. Kamu bisa mengubah nominal jika mentransfer lebih.
                     </small>
-                    <div class="alert alert-danger p-2 py-1.5 mt-2 mb-0 small d-none align-items-center gap-1.5 rounded-2" id="claimAmountValidationError">
+                    <div class="alert alert-danger p-2 py-2 mt-2 mb-0 small d-none align-items-center gap-2 rounded-2" id="claimAmountValidationError">
                         <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
                         <span id="claimAmountValidationErrorText">Nominal riil dibayar tidak boleh lebih kecil dari total tagihan!</span>
                     </div>

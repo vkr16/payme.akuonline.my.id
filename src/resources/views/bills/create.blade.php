@@ -16,19 +16,45 @@
         </div>
 
         <!-- PRIVACY & DATA RETENTION CTA BANNER (TOP POSITION WITH P-3 PADDING) -->
-        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-xs mb-4">
+        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-xs mb-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="p-2.5 bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <div class="p-2 bg-primary text-white rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                     <i class="fa-solid fa-user-shield fs-6"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold text-dark mb-0.5 fs-6">Jaminan Privasi & Retensi Data Otomatis</h6>
+                    <h6 class="fw-bold text-dark mb-1 fs-6">Jaminan Privasi & Retensi Data Otomatis</h6>
                     <p class="text-muted small mb-0" style="font-size: 0.78rem;">Data disimpan max {{ config('payme.retention.paid_days', 3) }} hari (lunas) / {{ config('payme.retention.unpaid_days', 7) }} hari (aktif) & dihapus permanen pukul 00:00 WIB.</p>
                 </div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3.5 fw-semibold flex-shrink-0 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+            <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3 fw-semibold flex-shrink-0 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
                 <i class="fa-solid fa-shield-halved me-1"></i> Pelajari Retensi
             </button>
+        </div>
+
+        <!-- QUICK ACCESS: BUAT QR DINAMIS INSTANT BANNER -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(13, 148, 136, 0.08) 100%); border: 1px solid rgba(2, 132, 199, 0.22) !important;">
+            <div class="card-body p-3 p-md-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-4 text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 46px; height: 46px; background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);">
+                            <i class="fa-solid fa-bolt-lightning fs-5 text-warning"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <h5 class="fw-bold text-dark mb-0 fs-6">Hanya Perlu QRIS Dinamis Instan?</h5>
+                                <span class="badge bg-primary text-white px-2 py-1 small fw-semibold" style="font-size: 0.68rem;">Quick Access</span>
+                            </div>
+                            <p class="text-muted small mb-0" style="font-size: 0.82rem;">
+                                Tidak ingin membuat rincian patungan & struk? Ubah QRIS statis kamu jadi QRIS dinamis ber-nominal presisi dalam hitungan detik.
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-gradient-primary btn-pill px-4 py-2 fw-bold d-inline-flex align-items-center justify-content-center gap-2 shadow-xs flex-shrink-0" data-bs-toggle="modal" data-bs-target="#instantQrisModal">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>Buat QR Dinamis Instant</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <form action="{{ route('bills.store') }}" method="POST" enctype="multipart/form-data" id="billForm">
@@ -134,7 +160,7 @@
                             </select>
                         </div>
 
-                        <label for="receiptFileInput" class="btn btn-sm btn-gradient-primary btn-pill px-3 mb-0 cursor-pointer d-flex align-items-center gap-1.5 shadow-sm">
+                        <label for="receiptFileInput" class="btn btn-sm btn-gradient-primary btn-pill px-3 mb-0 cursor-pointer d-flex align-items-center gap-2 shadow-sm">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                             <span>Pindai Struk via AI Vision</span>
                             <input type="file" name="receipt_images[]" id="receiptFileInput" class="d-none" accept="image/*" multiple>
@@ -228,7 +254,7 @@
                 <div class="card-body p-3 p-md-4 d-none" id="bankFieldsContainer">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                         <p class="text-muted small mb-0">Tambahkan opsi transfer rekening bank atau dompet digital (seperti BCA, Mandiri, GoPay, OVO, ShopeePay, dll).</p>
-                        <button type="button" class="btn btn-sm btn-gradient-primary btn-pill px-3 d-flex align-items-center gap-1.5 shadow-sm" id="btnAddBankRow">
+                        <button type="button" class="btn btn-sm btn-gradient-primary btn-pill px-3 d-flex align-items-center gap-2 shadow-sm" id="btnAddBankRow">
                             <i class="fa-solid fa-plus"></i>
                             <span>Tambah Rekening</span>
                         </button>
@@ -242,7 +268,7 @@
 
             <!-- SUBMIT ACTION -->
             <div class="d-flex justify-content-end mb-5">
-                <button type="button" class="btn btn-gradient-primary btn-lg btn-pill w-100 w-sm-auto px-5 py-3 shadow-md d-flex align-items-center justify-content-center gap-2.5 fw-bold fs-6" id="btnOpenConfirmModal">
+                <button type="button" class="btn btn-gradient-primary btn-lg btn-pill w-100 w-sm-auto px-5 py-3 shadow-md d-flex align-items-center justify-content-center gap-2 fw-bold fs-6" id="btnOpenConfirmModal">
                     <i class="fa-solid fa-paper-plane"></i>
                     <span>Simpan & Buat Link Patungan</span>
                 </button>
@@ -531,6 +557,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         merchantNameText.innerText = validation.merchantName || 'Merchant QRIS';
                         merchantCityText.innerText = validation.location ? 'Lokasi: ' + validation.location : '';
+
+                        let thumbDataUrl = '';
+                        try {
+                            const thumbCanvas = document.createElement('canvas');
+                            thumbCanvas.width = 120;
+                            thumbCanvas.height = 120;
+                            const tCtx = thumbCanvas.getContext('2d');
+                            tCtx.drawImage(img, 0, 0, 120, 120);
+                            thumbDataUrl = thumbCanvas.toDataURL('image/png');
+                        } catch (e) {}
+
+                        try {
+                            localStorage.setItem('payme_saved_qris', JSON.stringify({
+                                payload: code.data,
+                                merchantName: validation.merchantName || 'Merchant QRIS',
+                                merchantCity: validation.location || 'Indonesia',
+                                thumbnail: thumbDataUrl,
+                                updated_at: new Date().toISOString()
+                            }));
+                        } catch (err) {}
                     } else {
                         qrisStaticPayload.value = '';
                         qrisValidState.classList.add('d-none');

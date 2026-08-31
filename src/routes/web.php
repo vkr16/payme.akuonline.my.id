@@ -17,3 +17,11 @@ Route::post('/b/{slug}/qris', [BillController::class, 'generateDynamicQris'])->n
 Route::post('/b/{slug}/claim', [BillController::class, 'claimPayment'])->name('bills.claim');
 Route::get('/clean-retention', [BillController::class, 'cleanRetention'])->name('bills.clean-retention');
 
+Route::get('/instant-qris', function () {
+    return redirect('/create?instant=1');
+})->name('qris.instant');
+
+Route::get('/qris-instant', function () {
+    return redirect('/create?instant=1');
+});
+

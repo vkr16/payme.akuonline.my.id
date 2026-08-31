@@ -7,7 +7,7 @@
     <!-- Hero Header -->
     <div class="row justify-content-center text-center mb-5">
         <div class="col-lg-8">
-            <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 mb-3 fw-semibold small">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 mb-3 fw-semibold small">
                 <i class="fa-solid fa-bolt text-primary"></i>
                 <span>Solusi Patungan Pintar No. 1</span>
             </div>
@@ -21,11 +21,11 @@
             </p>
             
             <div class="d-flex flex-wrap align-items-center justify-content-center gap-3">
-                <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-lg btn-pill px-4 py-2.5 d-inline-flex align-items-center gap-2 shadow-sm fs-6">
+                <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-lg btn-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm fs-6">
                     <i class="fa-solid fa-plus"></i>
                     <span>Buat Tagihan Patungan</span>
                 </a>
-                <button type="button" class="btn btn-outline-secondary btn-lg btn-pill px-4 py-2.5 d-inline-flex align-items-center gap-2 fs-6" data-bs-toggle="modal" data-bs-target="#coffeeModal">
+                <button type="button" class="btn btn-outline-secondary btn-lg btn-pill px-4 py-2 d-inline-flex align-items-center gap-2 fs-6" data-bs-toggle="modal" data-bs-target="#coffeeModal">
                     <i class="fa-solid fa-mug-hot text-warning"></i>
                     <span>Dukung Pengembang</span>
                 </button>
