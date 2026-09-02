@@ -799,32 +799,39 @@
                                         <div class="vstack gap-2">
                                             <div class="row g-2">
                                                 <div class="col-6">
-                                                    <button type="button" class="btn btn-gradient-primary btn-sm btn-pill w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-xs" id="btnDownloadInstantQr">
-                                                        <i class="fa-solid fa-download"></i>
-                                                        <span>Unduh Gambar</span>
+                                                    <button type="button" class="btn btn-gradient-primary btn-sm btn-pill w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-xs" id="btnDownloadInstantQr" title="Unduh QR Code siap scan m-banking">
+                                                        <i class="fa-solid fa-qrcode"></i>
+                                                        <span>Unduh QR</span>
                                                     </button>
                                                 </div>
                                                 <div class="col-6">
-                                                    <button type="button" class="btn btn-outline-primary btn-sm btn-pill w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-xs" id="btnCopyInstantQrImage">
-                                                        <i class="fa-solid fa-copy"></i>
-                                                        <span id="btnCopyInstantImageText">Salin Gambar</span>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm btn-pill w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-xs" id="btnDownloadInstantCard" title="Unduh Kartu Pembayaran lengkap">
+                                                        <i class="fa-solid fa-id-card"></i>
+                                                        <span>Unduh Kartu</span>
                                                     </button>
                                                 </div>
                                             </div>
 
                                             <div class="row g-2">
                                                 <div class="col-6">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm btn-pill w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-xs" id="btnCopyInstantQrImage">
+                                                        <i class="fa-solid fa-copy"></i>
+                                                        <span id="btnCopyInstantImageText">Salin Gambar</span>
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
                                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-pill w-100 py-2 small d-flex align-items-center justify-content-center gap-1" id="btnCopyInstantString">
                                                         <i class="fa-solid fa-code"></i>
                                                         <span id="btnCopyInstantStringText">Salin String QR</span>
                                                     </button>
                                                 </div>
-                                                <div class="col-6">
-                                                    <a href="#" target="_blank" class="btn btn-outline-success btn-sm btn-pill w-100 py-2 small d-flex align-items-center justify-content-center gap-1" id="btnShareInstantWa">
-                                                        <i class="fa-brands fa-whatsapp"></i>
-                                                        <span>Kirim WhatsApp</span>
-                                                    </a>
-                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <a href="#" target="_blank" class="btn btn-outline-success btn-sm btn-pill w-100 py-2 small d-flex align-items-center justify-content-center gap-1" id="btnShareInstantWa">
+                                                    <i class="fa-brands fa-whatsapp"></i>
+                                                    <span>Kirim WhatsApp</span>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -892,6 +899,7 @@
         const instantResultFeeSubtext = document.getElementById('instantResultFeeSubtext');
 
         const btnDownloadInstantQr = document.getElementById('btnDownloadInstantQr');
+        const btnDownloadInstantCard = document.getElementById('btnDownloadInstantCard');
         const btnCopyInstantQrImage = document.getElementById('btnCopyInstantQrImage');
         const btnCopyInstantImageText = document.getElementById('btnCopyInstantImageText');
         const btnCopyInstantString = document.getElementById('btnCopyInstantString');
@@ -1309,11 +1317,10 @@
 
                 instantQrContainer.innerHTML = '';
                 if (typeof QRCode !== 'undefined') {
-                    new QRCode(instantQrContainer, {
-                        text: currentDynamicPayload,
-                        width: 220,
-                        height: 220,
-                        correctLevel: QRCode.CorrectLevel.M
+                    renderQrWithQuietZone(instantQrContainer, currentDynamicPayload, {
+                        qrSize: 320,
+                        margin: 20,
+                        displaySize: '220px'
                     });
                 }
 
@@ -1331,26 +1338,53 @@
             });
         }
 
-        // 8. Download Branded High-Resolution PNG Card
+        // 8a. Download Pure QR Code with Quiet Zone (Optimized for m-banking scanners)
         if (btnDownloadInstantQr) {
             btnDownloadInstantQr.addEventListener('click', function() {
+                if (!currentDynamicPayload) return;
+                const qrCanvas = instantQrContainer.querySelector('canvas');
+                const qrImg = instantQrContainer.querySelector('img');
+
+                let dataUrl = '';
+                if (qrCanvas) {
+                    dataUrl = qrCanvas.toDataURL('image/png');
+                } else if (qrImg) {
+                    dataUrl = qrImg.src;
+                }
+
+                if (dataUrl) {
+                    const link = document.createElement('a');
+                    const safeName = (currentMerchantInfo.name || 'merchant').toLowerCase().replace(/[^a-z0-9]/g, '-');
+                    link.download = `qris-dinamis-${safeName}-${currentFinalPayable}.png`;
+                    link.href = dataUrl;
+                    link.click();
+                } else {
+                    alert('Gambar QR Code tidak tersedia.');
+                }
+            });
+        }
+
+        // 8b. Download Branded High-Resolution PNG Card
+        if (btnDownloadInstantCard) {
+            btnDownloadInstantCard.addEventListener('click', function() {
                 if (!currentDynamicPayload) return;
                 generateQrCardCanvas(function(canvas) {
                     const link = document.createElement('a');
                     const safeName = (currentMerchantInfo.name || 'merchant').toLowerCase().replace(/[^a-z0-9]/g, '-');
-                    link.download = `qris-dinamis-${safeName}-${currentFinalPayable}.png`;
+                    link.download = `kartu-qris-${safeName}-${currentFinalPayable}.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                 });
             });
         }
 
-        // 9. Copy QR Image to Clipboard
+        // 9. Copy QR Image to Clipboard (Pure QR with Quiet Zone)
         if (btnCopyInstantQrImage) {
             btnCopyInstantQrImage.addEventListener('click', function() {
                 if (!currentDynamicPayload) return;
-                generateQrCardCanvas(function(canvas) {
-                    canvas.toBlob(function(blob) {
+                const qrCanvas = instantQrContainer.querySelector('canvas');
+                if (qrCanvas) {
+                    qrCanvas.toBlob(function(blob) {
                         if (!blob) {
                             alert('Gagal membuat gambar QRIS.');
                             return;
@@ -1363,13 +1397,13 @@
                                 btnCopyInstantImageText.innerText = 'Tersalin!';
                                 setTimeout(() => { btnCopyInstantImageText.innerText = orig; }, 2000);
                             }).catch(function(err) {
-                                alert('Peramban Anda tidak mengizinkan salin gambar langsung. Silakan gunakan tombol Unduh Gambar.');
+                                alert('Peramban Anda tidak mengizinkan salin gambar langsung. Silakan gunakan tombol Unduh QR.');
                             });
                         } else {
-                            alert('Fitur salin gambar langsung tidak didukung pada peramban ini. Silakan gunakan tombol Unduh Gambar.');
+                            alert('Fitur salin gambar langsung tidak didukung pada peramban ini. Silakan gunakan tombol Unduh QR.');
                         }
                     }, 'image/png');
-                });
+                }
             });
         }
 
@@ -1383,6 +1417,57 @@
                     setTimeout(() => { btnCopyInstantStringText.innerText = orig; }, 2000);
                 });
             });
+        }
+
+        /**
+         * Helper to render QR code with an official EMVCo / ISO 18004 quiet zone (pure white margin).
+         * Guarantees that mobile banking apps can scan the downloaded or saved image from gallery.
+         */
+        function renderQrWithQuietZone(container, payload, options = {}) {
+            const qrSize = options.qrSize || 320;
+            const margin = options.margin !== undefined ? options.margin : 20; // 20px white margin
+            const displaySize = options.displaySize || '220px';
+
+            container.innerHTML = '';
+
+            const tempDiv = document.createElement('div');
+            new QRCode(tempDiv, {
+                text: payload,
+                width: qrSize,
+                height: qrSize,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            const rawCanvas = tempDiv.querySelector('canvas');
+            const rawImg = tempDiv.querySelector('img');
+            const rawSource = rawCanvas || rawImg;
+
+            const totalSize = qrSize + (margin * 2);
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = totalSize;
+            finalCanvas.height = totalSize;
+            const ctx = finalCanvas.getContext('2d');
+
+            // 1. Fill solid pure white background across entire canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, totalSize, totalSize);
+
+            // 2. Draw raw QR code centered, leaving margin on all four sides
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(rawSource, margin, margin, qrSize, qrSize);
+
+            // 3. Create display img with margin baked into data URL
+            const finalImg = document.createElement('img');
+            finalImg.src = finalCanvas.toDataURL('image/png');
+            finalImg.alt = 'QRIS Dinamis';
+            finalImg.className = 'img-fluid d-block mx-auto';
+            finalImg.style.maxWidth = displaySize;
+            finalImg.style.width = '100%';
+            finalImg.style.height = 'auto';
+
+            finalCanvas.style.display = 'none';
+            container.appendChild(finalCanvas);
+            container.appendChild(finalImg);
         }
 
         // 11. Helper to render aesthetic High-Res Branded Card on Canvas
@@ -1435,18 +1520,18 @@
             ctx.font = '800 36px Plus Jakarta Sans, sans-serif';
             ctx.fillText(formatRupiah(currentFinalPayable), width / 2, 260);
 
-            // QR Border Card
+            // QR Border Card with pure white background
             const qrBoxSize = 340;
             const qrBoxX = (width - qrBoxSize) / 2;
             const qrBoxY = 295;
 
-            ctx.fillStyle = '#f8fafc';
+            ctx.fillStyle = '#ffffff'; // Solid pure white for quiet zone
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 2;
             roundRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 20, true, true);
 
-            // Draw QR Image
-            const qrInnerSize = 280;
+            // Draw QR Image (qrSource already contains quiet zone margin)
+            const qrInnerSize = 300;
             const qrInnerX = (width - qrInnerSize) / 2;
             const qrInnerY = qrBoxY + (qrBoxSize - qrInnerSize) / 2;
             ctx.drawImage(qrSource, qrInnerX, qrInnerY, qrInnerSize, qrInnerSize);

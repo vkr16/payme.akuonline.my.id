@@ -703,6 +703,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalRoundUpBadge = document.getElementById('modalRoundUpBadge');
     const modalRoundUpHelperText = document.getElementById('modalRoundUpHelperText');
 
+    /**
+     * Helper to render QR code with an official EMVCo / ISO 18004 quiet zone (pure white margin).
+     * Prevents QR modules from directly touching image borders so mobile banking apps (BCA, Livin, BRImo, etc.)
+     * can reliably scan the image when uploaded from gallery.
+     */
+    function renderQrWithQuietZone(container, payload, options = {}) {
+        const qrSize = options.qrSize || 320;
+        const margin = options.margin !== undefined ? options.margin : 20; // 20px white margin
+        const displaySize = options.displaySize || '240px';
+
+        container.innerHTML = '';
+
+        // Generate base QR into temporary offscreen container
+        const tempDiv = document.createElement('div');
+        new QRCode(tempDiv, {
+            text: payload,
+            width: qrSize,
+            height: qrSize,
+            correctLevel: QRCode.CorrectLevel.M
+        });
+
+        const rawCanvas = tempDiv.querySelector('canvas');
+        const rawImg = tempDiv.querySelector('img');
+        const rawSource = rawCanvas || rawImg;
+
+        const totalSize = qrSize + (margin * 2);
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = totalSize;
+        finalCanvas.height = totalSize;
+        const ctx = finalCanvas.getContext('2d');
+
+        // 1. Fill solid pure white background (quiet zone)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, totalSize, totalSize);
+
+        // 2. Draw raw QR code centered with margin
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(rawSource, margin, margin, qrSize, qrSize);
+
+        // 3. Create display img with margin baked in
+        const finalImg = document.createElement('img');
+        finalImg.src = finalCanvas.toDataURL('image/png');
+        finalImg.alt = 'QRIS Dinamis';
+        finalImg.className = 'img-fluid d-block mx-auto';
+        finalImg.style.maxWidth = displaySize;
+        finalImg.style.width = '100%';
+        finalImg.style.height = 'auto';
+
+        // Keep canvas in container (hidden) for high-res download
+        finalCanvas.style.display = 'none';
+        container.appendChild(finalCanvas);
+        container.appendChild(finalImg);
+    }
+
     async function fetchAndRenderQris(isRoundUp) {
         const selection = getSelectedItemsData();
         if (Object.keys(selection.items).length === 0) {
@@ -752,13 +806,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                // Render QR Code
-                modalQrCodeContainer.innerHTML = '';
-                new QRCode(modalQrCodeContainer, {
-                    text: data.dynamic_qris_payload,
-                    width: 240,
-                    height: 240,
-                    correctLevel: QRCode.CorrectLevel.M
+                // Render QR Code with Quiet Zone / Margin (guarantees readability on mbanking apps)
+                renderQrWithQuietZone(modalQrCodeContainer, data.dynamic_qris_payload, {
+                    qrSize: 320,
+                    margin: 20,
+                    displaySize: '240px'
                 });
             } else {
                 alert('Gagal meng-generate QRIS dinamis. Pastikan QRIS statis valid.');
