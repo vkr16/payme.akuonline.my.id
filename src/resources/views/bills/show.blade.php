@@ -178,6 +178,23 @@
                 <small class="text-muted d-block mt-1">Tentukan porsi atau item yang ingin kamu bayar</small>
             </div>
             <div class="card-body p-3 p-md-4">
+                <!-- Search Input for Items with Reset Button (Normal Size) -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-muted">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="searchItemInput" class="form-control" placeholder="Cari item pesanan..." autocomplete="off">
+                        <button class="btn btn-outline-secondary" type="button" id="btnResetSearchItem" title="Reset pencarian">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div id="noItemsFoundAlert" class="text-center py-3 text-muted small d-none">
+                    Item "<span id="searchKeywordDisplay" class="fw-semibold text-dark"></span>" tidak ditemukan.
+                </div>
+
                 <div class="vstack gap-3" id="participantItemsList">
                     @foreach($bill->items as $item)
                         @php
@@ -604,6 +621,49 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(`Nomor rekening/HP ${bankName} (${bankAcc}) berhasil disalin!`);
         });
     });
+
+    // Search Items Filter
+    const searchItemInput = document.getElementById('searchItemInput');
+    const btnResetSearchItem = document.getElementById('btnResetSearchItem');
+    const noItemsFoundAlert = document.getElementById('noItemsFoundAlert');
+    const searchKeywordDisplay = document.getElementById('searchKeywordDisplay');
+
+    if (searchItemInput && participantItemsList) {
+        function filterParticipantItems() {
+            const query = searchItemInput.value.trim().toLowerCase();
+            const cards = participantItemsList.querySelectorAll('.item-claim-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const itemName = (card.dataset.itemName || '').toLowerCase();
+                if (!query || itemName.includes(query)) {
+                    card.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    card.classList.add('d-none');
+                }
+            });
+
+            if (noItemsFoundAlert) {
+                if (visibleCount === 0 && query) {
+                    if (searchKeywordDisplay) searchKeywordDisplay.textContent = searchItemInput.value;
+                    noItemsFoundAlert.classList.remove('d-none');
+                } else {
+                    noItemsFoundAlert.classList.add('d-none');
+                }
+            }
+        }
+
+        searchItemInput.addEventListener('input', filterParticipantItems);
+
+        if (btnResetSearchItem) {
+            btnResetSearchItem.addEventListener('click', function() {
+                searchItemInput.value = '';
+                filterParticipantItems();
+                searchItemInput.focus();
+            });
+        }
+    }
 
     // Claim item quantity controls
     participantItemsList.addEventListener('click', function(e) {
