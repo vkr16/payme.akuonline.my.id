@@ -93,6 +93,51 @@
                     @endif
                 </div>
 
+                <!-- Rincian Biaya Keseluruhan Tagihan -->
+                <div class="p-3 rounded-3 bg-white border mb-3 text-start shadow-xs">
+                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                        <span class="fw-bold text-dark small d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-receipt text-primary"></i>
+                            <span>Rincian Biaya Keseluruhan Tagihan</span>
+                        </span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 small">
+                            {{ $bill->items->count() }} Item Pesanan
+                        </span>
+                    </div>
+                    <div class="vstack gap-2 small">
+                        <div class="d-flex justify-content-between align-items-center text-muted">
+                            <span>Subtotal Item (Semua Produk):</span>
+                            <span class="fw-semibold text-dark">Rp {{ number_format($bill->subtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center {{ $bill->delivery_fee > 0 ? 'text-muted' : 'text-muted opacity-75' }}">
+                            <span><i class="fa-solid fa-motorcycle text-primary me-1"></i> Total Ongkos Kirim:</span>
+                            @if($bill->delivery_fee > 0)
+                                <span class="fw-semibold text-dark">+Rp {{ number_format($bill->delivery_fee, 0, ',', '.') }}</span>
+                            @else
+                                <span class="badge bg-light text-muted border fw-normal">Rp 0 (Gratis)</span>
+                            @endif
+                        </div>
+                        @if($bill->service_fee > 0)
+                            <div class="d-flex justify-content-between align-items-center text-muted">
+                                <span><i class="fa-solid fa-bell-concierge text-secondary me-1"></i> Total Biaya Layanan:</span>
+                                <span class="fw-semibold text-dark">+Rp {{ number_format($bill->service_fee, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+                        <div class="d-flex justify-content-between align-items-center {{ $bill->discount > 0 ? 'text-success' : 'text-muted opacity-75' }}">
+                            <span><i class="fa-solid fa-tags {{ $bill->discount > 0 ? 'text-success' : 'text-muted' }} me-1"></i> Total Diskon / Promo:</span>
+                            @if($bill->discount > 0)
+                                <span class="fw-bold text-success">-Rp {{ number_format($bill->discount, 0, ',', '.') }}</span>
+                            @else
+                                <span class="badge bg-light text-muted border fw-normal">Rp 0</span>
+                            @endif
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top fw-bold text-dark">
+                            <span>Grand Total Struk / Tagihan:</span>
+                            <span class="text-primary fs-6">Rp {{ number_format($bill->total_amount, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                </div>
+
                 @php
                     $shareUrl = route('bills.show', ['slug' => $bill->slug]);
                     if (str_contains($shareUrl, ':///') || !str_contains($shareUrl, '://')) {
@@ -253,15 +298,56 @@
         <!-- Bill Summary & Action Buttons -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4">
-                <h5 class="fw-bold text-dark mb-3 fs-6">Ringkasan Tagihan Saya</h5>
+                <h5 class="fw-bold text-dark mb-3 fs-6 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-receipt text-primary"></i>
+                    <span>Ringkasan Tagihan Saya</span>
+                </h5>
 
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="text-muted small">Subtotal Item Saya:</span>
                     <span class="fw-semibold text-dark" id="summaryMyItemsSubtotal">Rp 0</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted small">Proporsi Ongkir & Fee:</span>
-                    <span class="fw-semibold text-primary" id="summaryMyFeeShare">Rp 0</span>
+
+                <!-- Proporsi Biaya Tambahan & Diskon Box -->
+                <div class="p-3 rounded-3 bg-light border mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small fw-semibold">
+                            <i class="fa-solid fa-scale-balanced text-primary me-1"></i> Proporsi Biaya & Diskon Kamu:
+                        </span>
+                        <span class="fw-bold fs-6 text-primary" id="summaryMyFeeShare">Rp 0</span>
+                    </div>
+
+                    <div class="vstack gap-1 small pt-2 border-top border-secondary border-opacity-10" id="feeProportionBreakdown">
+                        <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.8rem;">
+                            <span>
+                                <i class="fa-solid fa-motorcycle text-primary me-1"></i> Proporsi Ongkir:
+                                <small class="text-secondary d-block d-sm-inline ms-sm-1" style="font-size: 0.72rem;">(dari total Rp {{ number_format($bill->delivery_fee, 0, ',', '.') }})</small>
+                            </span>
+                            <span class="fw-semibold text-dark" id="summaryMyDeliveryFeeShare">+Rp 0</span>
+                        </div>
+
+                        @if($bill->service_fee > 0)
+                        <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.8rem;">
+                            <span>
+                                <i class="fa-solid fa-bell-concierge text-secondary me-1"></i> Proporsi Biaya Layanan:
+                                <small class="text-secondary d-block d-sm-inline ms-sm-1" style="font-size: 0.72rem;">(dari total Rp {{ number_format($bill->service_fee, 0, ',', '.') }})</small>
+                            </span>
+                            <span class="fw-semibold text-dark" id="summaryMyServiceFeeShare">+Rp 0</span>
+                        </div>
+                        @endif
+
+                        <div class="d-flex justify-content-between align-items-center text-success" style="font-size: 0.8rem;">
+                            <span>
+                                <i class="fa-solid fa-tags text-success me-1"></i> Proporsi Diskon:
+                                <small class="text-success text-opacity-75 d-block d-sm-inline ms-sm-1" style="font-size: 0.72rem;">(dari total -Rp {{ number_format($bill->discount, 0, ',', '.') }})</small>
+                            </span>
+                            <span class="fw-bold text-success" id="summaryMyDiscountShare">-Rp 0</span>
+                        </div>
+
+                        <div class="text-muted mt-1 pt-1 border-top border-light" style="font-size: 0.72rem;">
+                            <i class="fa-solid fa-circle-info text-primary me-1"></i> Dihitung proporsional: <strong id="summaryMyProportionPercent" class="text-dark">0%</strong> dari subtotal kamu terhadap total produk (Rp {{ number_format($bill->subtotal, 0, ',', '.') }}).
+                        </div>
+                    </div>
                 </div>
 
                 <!-- OPSI BULATKAN KE ATAS (TIP/TERIMA KASIH) -->
@@ -287,7 +373,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h6 class="fw-bold text-dark mb-0">Total Harus Dibayar:</h6>
-                        <small class="text-muted">Harga Item + Proporsi Ongkir</small>
+                        <small class="text-muted">Item + Proporsi Ongkir/Biaya - Diskon</small>
                     </div>
                     <span class="fw-bold text-primary fs-3" id="summaryMyTotalPayable">Rp 0</span>
                 </div>
@@ -511,6 +597,29 @@
                 <div class="p-3 rounded bg-light border mb-3">
                     <h6 class="fw-bold text-dark mb-2 small">Rincian Yang Diklaim:</h6>
                     <div id="claimItemsSummaryList" class="small text-muted mb-2"></div>
+
+                    <!-- Breakdown Proporsi Biaya & Diskon di Modal -->
+                    <div id="claimFeeBreakdownContainer" class="pt-2 border-top border-light vstack gap-1 small mb-2">
+                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.78rem;">
+                            <span>Subtotal Item:</span>
+                            <span class="fw-semibold text-dark" id="claimModalSubtotal">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.78rem;">
+                            <span><i class="fa-solid fa-motorcycle text-primary me-1"></i> Proporsi Ongkir <span class="text-secondary">(Total: Rp {{ number_format($bill->delivery_fee, 0, ',', '.') }})</span>:</span>
+                            <span class="fw-semibold text-dark" id="claimModalDeliveryShare">+Rp 0</span>
+                        </div>
+                        @if($bill->service_fee > 0)
+                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.78rem;">
+                            <span><i class="fa-solid fa-bell-concierge text-secondary me-1"></i> Proporsi Biaya Layanan <span class="text-secondary">(Total: Rp {{ number_format($bill->service_fee, 0, ',', '.') }})</span>:</span>
+                            <span class="fw-semibold text-dark" id="claimModalServiceShare">+Rp 0</span>
+                        </div>
+                        @endif
+                        <div class="d-flex justify-content-between text-success" style="font-size: 0.78rem;">
+                            <span><i class="fa-solid fa-tags text-success me-1"></i> Proporsi Diskon <span class="text-success text-opacity-75">(Total: -Rp {{ number_format($bill->discount, 0, ',', '.') }})</span>:</span>
+                            <span class="fw-bold text-success" id="claimModalDiscountShare">-Rp 0</span>
+                        </div>
+                    </div>
+
                     <div id="claimRoundUpRow" class="d-none justify-content-between align-items-center text-primary small mb-2">
                         <span><i class="fa-solid fa-arrow-trend-up me-1"></i> Pembulatan ke Atas (Tip):</span>
                         <span class="fw-semibold" id="claimRoundUpAmount">+Rp 0</span>
@@ -563,10 +672,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const billSlug = "{{ $bill->slug }}";
     const totalBillSubtotal = {{ $bill->subtotal }};
     const netExtraFees = {{ $bill->net_extra_fees }};
+    const totalDeliveryFee = {{ $bill->delivery_fee }};
+    const totalServiceFee = {{ $bill->service_fee }};
+    const totalDiscount = {{ $bill->discount }};
 
     const participantItemsList = document.getElementById('participantItemsList');
     const summaryMyItemsSubtotal = document.getElementById('summaryMyItemsSubtotal');
     const summaryMyFeeShare = document.getElementById('summaryMyFeeShare');
+    const summaryMyDeliveryFeeShare = document.getElementById('summaryMyDeliveryFeeShare');
+    const summaryMyServiceFeeShare = document.getElementById('summaryMyServiceFeeShare');
+    const summaryMyDiscountShare = document.getElementById('summaryMyDiscountShare');
+    const summaryMyProportionPercent = document.getElementById('summaryMyProportionPercent');
     const summaryMyTotalPayable = document.getElementById('summaryMyTotalPayable');
     const btnProcessQris = document.getElementById('btnProcessQris');
 
@@ -591,6 +707,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnOpenClaimFromModal = document.getElementById('btnOpenClaimFromModal');
     const claimPayerNameInput = document.getElementById('claimPayerNameInput');
     const claimItemsSummaryList = document.getElementById('claimItemsSummaryList');
+    const claimModalSubtotal = document.getElementById('claimModalSubtotal');
+    const claimModalDeliveryShare = document.getElementById('claimModalDeliveryShare');
+    const claimModalServiceShare = document.getElementById('claimModalServiceShare');
+    const claimModalDiscountShare = document.getElementById('claimModalDiscountShare');
     const claimRoundUpRow = document.getElementById('claimRoundUpRow');
     const claimRoundUpAmount = document.getElementById('claimRoundUpAmount');
     const claimTotalDisplay = document.getElementById('claimTotalDisplay');
@@ -713,9 +833,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         let feeShare = 0;
+        let deliveryFeeShare = 0;
+        let serviceFeeShare = 0;
+        let discountShare = 0;
+        let proportion = 0;
+
         if (totalBillSubtotal > 0 && subtotal > 0) {
-            const proportion = subtotal / totalBillSubtotal;
-            feeShare = proportion * netExtraFees;
+            proportion = subtotal / totalBillSubtotal;
+            deliveryFeeShare = Math.round(proportion * totalDeliveryFee);
+            serviceFeeShare = Math.round(proportion * totalServiceFee);
+            discountShare = Math.round(proportion * totalDiscount);
+            feeShare = (deliveryFeeShare + serviceFeeShare) - discountShare;
         }
 
         const exactPayable = Math.max(0, Math.round(subtotal + feeShare));
@@ -730,16 +858,57 @@ document.addEventListener('DOMContentLoaded', function() {
             totalPayable = rounded;
         }
 
-        return { items, itemsList, subtotal, feeShare, exactPayable, roundUpExtra, isRoundUp, totalPayable };
+        return {
+            items,
+            itemsList,
+            subtotal,
+            proportion,
+            deliveryFeeShare,
+            serviceFeeShare,
+            discountShare,
+            feeShare,
+            exactPayable,
+            roundUpExtra,
+            isRoundUp,
+            totalPayable
+        };
     }
 
     function recalculateParticipantSummary() {
         const data = getSelectedItemsData();
         currentTotalPayable = data.totalPayable;
 
-        summaryMyItemsSubtotal.innerText = formatRupiah(data.subtotal);
-        summaryMyFeeShare.innerText = formatRupiah(data.feeShare);
-        summaryMyTotalPayable.innerText = formatRupiah(data.totalPayable);
+        if (summaryMyItemsSubtotal) {
+            summaryMyItemsSubtotal.innerText = formatRupiah(data.subtotal);
+        }
+        if (summaryMyFeeShare) {
+            if (data.feeShare > 0) {
+                summaryMyFeeShare.innerText = '+' + formatRupiah(data.feeShare);
+                summaryMyFeeShare.className = 'fw-bold fs-6 text-primary';
+            } else if (data.feeShare < 0) {
+                summaryMyFeeShare.innerText = '-' + formatRupiah(Math.abs(data.feeShare));
+                summaryMyFeeShare.className = 'fw-bold fs-6 text-success';
+            } else {
+                summaryMyFeeShare.innerText = formatRupiah(0);
+                summaryMyFeeShare.className = 'fw-bold fs-6 text-muted';
+            }
+        }
+        if (summaryMyDeliveryFeeShare) {
+            summaryMyDeliveryFeeShare.innerText = '+' + formatRupiah(data.deliveryFeeShare);
+        }
+        if (summaryMyServiceFeeShare) {
+            summaryMyServiceFeeShare.innerText = '+' + formatRupiah(data.serviceFeeShare);
+        }
+        if (summaryMyDiscountShare) {
+            summaryMyDiscountShare.innerText = '-' + formatRupiah(data.discountShare);
+        }
+        if (summaryMyProportionPercent) {
+            const pct = (data.proportion * 100).toFixed(1).replace('.0', '');
+            summaryMyProportionPercent.innerText = `${pct}%`;
+        }
+        if (summaryMyTotalPayable) {
+            summaryMyTotalPayable.innerText = formatRupiah(data.totalPayable);
+        }
 
         if (toggleRoundUp && toggleRoundUp.checked && data.subtotal > 0) {
             roundUpDiffBadge.classList.remove('d-none');
@@ -985,6 +1154,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (claimItemsSummaryList) {
             claimItemsSummaryList.innerHTML = html;
+        }
+
+        if (claimModalSubtotal) {
+            claimModalSubtotal.innerText = formatRupiah(selection.subtotal);
+        }
+        if (claimModalDeliveryShare) {
+            claimModalDeliveryShare.innerText = '+' + formatRupiah(selection.deliveryFeeShare);
+        }
+        if (claimModalServiceShare) {
+            claimModalServiceShare.innerText = '+' + formatRupiah(selection.serviceFeeShare);
+        }
+        if (claimModalDiscountShare) {
+            claimModalDiscountShare.innerText = '-' + formatRupiah(selection.discountShare);
         }
 
         if (claimRoundUpRow && claimRoundUpAmount) {

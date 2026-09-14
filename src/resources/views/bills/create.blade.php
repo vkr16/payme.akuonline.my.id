@@ -100,6 +100,35 @@
                     </span>
                 </div>
                 <div class="card-body p-3 p-md-4">
+                    <!-- Banner QRIS Tersimpan dari Browser -->
+                    <div id="savedQrisBanner" class="alert alert-light border border-primary border-opacity-25 bg-primary bg-opacity-10 rounded-3 p-3 mb-3 d-none">
+                        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 36px; height: 36px;">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small d-flex align-items-center flex-wrap gap-2">
+                                        <span>QRIS Terakhir Dimuat Otomatis</span>
+                                        <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25 px-1.5 py-0.5" style="font-size: 0.7rem;">Tersimpan di Browser</span>
+                                    </div>
+                                    <div class="text-muted small" id="savedQrisMerchantInfo">
+                                        Merchant: <strong id="savedQrisMerchantName">-</strong> <span id="savedQrisMerchantCity" class="text-muted"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 w-sm-auto justify-content-end mt-2 mt-sm-0">
+                                <button type="button" class="btn btn-sm btn-white bg-white border text-dark shadow-sm d-flex align-items-center gap-1" id="btnChangeQris">
+                                    <i class="fa-solid fa-arrow-rotate-right text-primary"></i>
+                                    <span>Ganti QRIS</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="btnForgetQris" title="Hapus QRIS tersimpan dari browser">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row align-items-center g-3">
                         <div class="col-md-7">
                             <label class="upload-dropzone w-100 mb-0" for="qrisFileInput" id="qrisDropzone">
@@ -253,11 +282,21 @@
                 </div>
                 <div class="card-body p-3 p-md-4 d-none" id="bankFieldsContainer">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                        <p class="text-muted small mb-0">Tambahkan opsi transfer rekening bank atau dompet digital (seperti BCA, Mandiri, GoPay, OVO, ShopeePay, dll).</p>
-                        <button type="button" class="btn btn-sm btn-gradient-primary btn-pill px-3 d-flex align-items-center gap-2 shadow-sm" id="btnAddBankRow">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>Tambah Rekening</span>
-                        </button>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <p class="text-muted small mb-0">Tambahkan opsi transfer rekening bank atau dompet digital (seperti BCA, Mandiri, GoPay, OVO, ShopeePay, dll).</p>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 small d-none" id="bankSavedBadge">
+                                <i class="fa-solid fa-clock-rotate-left me-1"></i> Data Tersimpan Dimuat
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-pill px-2.5 d-none" id="btnClearSavedBanks" title="Hapus rekening tersimpan dari browser">
+                                <i class="fa-solid fa-trash-can me-1"></i> Hapus Tersimpan
+                            </button>
+                            <button type="button" class="btn btn-sm btn-gradient-primary btn-pill px-3 d-flex align-items-center gap-2 shadow-sm" id="btnAddBankRow">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Tambah Rekening</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div id="banksListContainer" class="vstack gap-3">
@@ -289,9 +328,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-primary bg-primary bg-opacity-10 border border-primary border-opacity-25 text-dark rounded-3 mb-3 small d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-circle-info text-primary fs-5 flex-shrink-0"></i>
-                    <div>Mohon periksa kembali total nominal dan rincian item sebelum membuat tagihan patungan.</div>
+                <div class="alert alert-primary bg-primary bg-opacity-10 border border-primary border-opacity-25 text-dark rounded-3 mb-3 small d-flex align-items-start gap-2">
+                    <i class="fa-solid fa-circle-info text-primary fs-5 flex-shrink-0 mt-1"></i>
+                    <div>Pastikan rincian item dan total tagihan sudah sesuai. Ekstraksi struk diproses otomatis oleh AI dan berpotensi memuat kekeliruan.</div>
                 </div>
 
                 <!-- Host & Bill Title Summary -->
@@ -429,7 +468,10 @@ document.addEventListener('DOMContentLoaded', function() {
         attachCurrencyFormatter(input);
     });
 
-    // Multi-Bank Row logic
+    // Multi-Bank Row logic & Browser Persistence
+    const bankSavedBadge = document.getElementById('bankSavedBadge');
+    const btnClearSavedBanks = document.getElementById('btnClearSavedBanks');
+
     function addBankRow(bankName = '', accountNumber = '', accountHolder = '') {
         const card = document.createElement('div');
         card.className = 'card border shadow-sm bank-row';
@@ -440,15 +482,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row g-2 align-items-center">
                     <div class="col-12 col-md-4">
                         <label class="form-label text-dark small fw-semibold mb-1">Nama Bank / Dompet Digital</label>
-                        <input type="text" name="banks[${bankIndex}][bank_name]" class="form-control form-control-sm" placeholder="Contoh: BCA / GoPay / Mandiri" value="${escapeHtml(bankName)}">
+                        <input type="text" name="banks[${bankIndex}][bank_name]" class="form-control form-control-sm" placeholder="Contoh: BCA / GoPay" value="${escapeHtml(bankName)}">
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label text-dark small fw-semibold mb-1">Nomor Rekening / HP</label>
                         <input type="text" name="banks[${bankIndex}][account_number]" class="form-control form-control-sm" placeholder="Contoh: 1234567890" value="${escapeHtml(accountNumber)}">
                     </div>
                     <div class="col-10 col-md-3">
-                        <label class="form-label text-dark small fw-semibold mb-1">Atas Nama (A.N.)</label>
-                        <input type="text" name="banks[${bankIndex}][account_holder]" class="form-control form-control-sm" placeholder="Contoh: Fikri M" value="${escapeHtml(accountHolder)}">
+                        <label class="form-label text-dark small fw-semibold mb-1">Atas Nama (a/n)</label>
+                        <input type="text" name="banks[${bankIndex}][account_holder]" class="form-control form-control-sm" placeholder="Contoh: John Doe" value="${escapeHtml(accountHolder)}">
                     </div>
                     <div class="col-2 col-md-1 text-end pt-3">
                         <button type="button" class="btn btn-sm btn-outline-danger border-0 btn-delete-bank p-2" title="Hapus Rekening">
@@ -462,23 +504,109 @@ document.addEventListener('DOMContentLoaded', function() {
         banksListContainer.appendChild(card);
         bankIndex++;
 
+        card.querySelectorAll('input').forEach(input => {
+            input.disabled = !toggleBankOption.checked;
+        });
+
         card.querySelector('.btn-delete-bank').addEventListener('click', () => {
             card.remove();
+            saveBanksToStorage();
         });
+    }
+
+    function enableBankInputs(enabled) {
+        document.querySelectorAll('#banksListContainer input').forEach(input => {
+            input.disabled = !enabled;
+        });
+    }
+
+    function loadSavedBanks() {
+        try {
+            const raw = localStorage.getItem('payme_saved_banks');
+            if (!raw) return false;
+            const banks = JSON.parse(raw);
+            if (!Array.isArray(banks) || banks.length === 0) return false;
+
+            banksListContainer.innerHTML = '';
+            banks.forEach(b => {
+                if (b && (b.bank_name || b.account_number || b.account_holder)) {
+                    addBankRow(b.bank_name || '', b.account_number || '', b.account_holder || '');
+                }
+            });
+
+            if (banksListContainer.children.length > 0) {
+                if (bankSavedBadge) bankSavedBadge.classList.remove('d-none');
+                if (btnClearSavedBanks) btnClearSavedBanks.classList.remove('d-none');
+                return true;
+            }
+        } catch (e) {
+            console.error('Gagal memuat bank dari localStorage:', e);
+        }
+        return false;
+    }
+
+    function saveBanksToStorage() {
+        if (!toggleBankOption.checked) return;
+        const banks = [];
+        document.querySelectorAll('#banksListContainer .bank-row').forEach(row => {
+            const bankName = row.querySelector('input[name*="[bank_name]"]')?.value?.trim() || '';
+            const accNum = row.querySelector('input[name*="[account_number]"]')?.value?.trim() || '';
+            const accHolder = row.querySelector('input[name*="[account_holder]"]')?.value?.trim() || '';
+            if (bankName || accNum || accHolder) {
+                banks.push({
+                    bank_name: bankName,
+                    account_number: accNum,
+                    account_holder: accHolder
+                });
+            }
+        });
+
+        try {
+            if (banks.length > 0) {
+                localStorage.setItem('payme_saved_banks', JSON.stringify(banks));
+                if (btnClearSavedBanks) btnClearSavedBanks.classList.remove('d-none');
+            } else {
+                localStorage.removeItem('payme_saved_banks');
+                if (bankSavedBadge) bankSavedBadge.classList.add('d-none');
+                if (btnClearSavedBanks) btnClearSavedBanks.classList.add('d-none');
+            }
+        } catch (e) {}
     }
 
     btnAddBankRow.addEventListener('click', function() {
         addBankRow('', '', '');
     });
 
+    banksListContainer.addEventListener('input', function() {
+        saveBanksToStorage();
+    });
+
+    if (btnClearSavedBanks) {
+        btnClearSavedBanks.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Hapus daftar rekening bank yang tersimpan di browser ini?')) {
+                try {
+                    localStorage.removeItem('payme_saved_banks');
+                } catch (e) {}
+                if (bankSavedBadge) bankSavedBadge.classList.add('d-none');
+                btnClearSavedBanks.classList.add('d-none');
+            }
+        });
+    }
+
     toggleBankOption.addEventListener('change', function() {
         if (this.checked) {
             bankFieldsContainer.classList.remove('d-none');
+            enableBankInputs(true);
             if (banksListContainer.children.length === 0) {
-                addBankRow('', '', '');
+                const loaded = loadSavedBanks();
+                if (!loaded) {
+                    addBankRow('', '', '');
+                }
             }
         } else {
             bankFieldsContainer.classList.add('d-none');
+            enableBankInputs(false);
         }
     });
 
@@ -487,6 +615,148 @@ document.addEventListener('DOMContentLoaded', function() {
     const qrisInvalidState = document.getElementById('qrisInvalidState');
     const qrisInvalidTitle = document.getElementById('qrisInvalidTitle');
     const qrisInvalidReason = document.getElementById('qrisInvalidReason');
+
+    // Saved QRIS Elements
+    const savedQrisBanner = document.getElementById('savedQrisBanner');
+    const savedQrisMerchantName = document.getElementById('savedQrisMerchantName');
+    const savedQrisMerchantCity = document.getElementById('savedQrisMerchantCity');
+    const btnChangeQris = document.getElementById('btnChangeQris');
+    const btnForgetQris = document.getElementById('btnForgetQris');
+
+    function getOptimizedDataUrl(img, maxDim = 800) {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+            if (w > h) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+            } else {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+            }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        return canvas.toDataURL('image/jpeg', 0.85);
+    }
+
+    function dataURLtoFile(dataurl, filename) {
+        const arr = dataurl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
+    }
+
+    function updateSavedQrisBanner(data) {
+        if (!savedQrisBanner) return;
+        if (data && data.payload) {
+            if (savedQrisMerchantName) savedQrisMerchantName.innerText = data.merchantName || 'Merchant QRIS';
+            if (savedQrisMerchantCity) savedQrisMerchantCity.innerText = data.merchantCity ? '(' + data.merchantCity + ')' : '';
+            savedQrisBanner.classList.remove('d-none');
+        } else {
+            savedQrisBanner.classList.add('d-none');
+        }
+    }
+
+    function generateQrOnCanvas(payload) {
+        const tempDiv = document.createElement('div');
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(tempDiv, {
+                text: payload,
+                width: 300,
+                height: 300,
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            setTimeout(() => {
+                const c = tempDiv.querySelector('canvas') || tempDiv.querySelector('img');
+                if (c) {
+                    const src = c.toDataURL ? c.toDataURL('image/png') : c.src;
+                    const img = new Image();
+                    img.onload = function() {
+                        qrisCanvas.width = img.width;
+                        qrisCanvas.height = img.height;
+                        const ctx = qrisCanvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        qrisCanvas.classList.remove('d-none');
+
+                        try {
+                            const file = dataURLtoFile(src, 'qris_terakhir.png');
+                            const dt = new DataTransfer();
+                            dt.items.add(file);
+                            qrisFileInput.files = dt.files;
+                        } catch (e) {}
+                    };
+                    img.src = src;
+                }
+            }, 60);
+        }
+    }
+
+    function applySavedQris(data, validation) {
+        qrisStaticPayload.value = data.payload;
+        merchantNameText.innerText = validation.merchantName || data.merchantName || 'Merchant QRIS';
+        merchantCityText.innerText = (validation.location || data.merchantCity) ? 'Lokasi: ' + (validation.location || data.merchantCity) : '';
+
+        qrisEmptyState.classList.add('d-none');
+        qrisValidState.classList.remove('d-none');
+        qrisInvalidState.classList.add('d-none');
+
+        updateSavedQrisBanner(data);
+
+        const imageSource = data.imageData || data.thumbnail;
+        if (imageSource) {
+            const img = new Image();
+            img.onload = function() {
+                qrisCanvas.width = img.width;
+                qrisCanvas.height = img.height;
+                const ctx = qrisCanvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                qrisCanvas.classList.remove('d-none');
+
+                try {
+                    const file = dataURLtoFile(imageSource, 'qris_terakhir.jpg');
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    qrisFileInput.files = dt.files;
+                } catch (err) {
+                    console.warn('DataTransfer fallback:', err);
+                }
+            };
+            img.src = imageSource;
+        } else {
+            generateQrOnCanvas(data.payload);
+        }
+    }
+
+    function loadSavedQrisOnStartup() {
+        try {
+            const raw = localStorage.getItem('payme_saved_qris');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (!data || !data.payload) return;
+
+            const validation = validateQrisPayload(data.payload);
+            if (!validation.valid) return;
+
+            // If there is already a different payload from old server input, keep it
+            if (qrisStaticPayload.value && qrisStaticPayload.value.trim().length > 0 && qrisStaticPayload.value !== data.payload) {
+                return;
+            }
+
+            applySavedQris(data, validation);
+        } catch (e) {
+            console.error('Gagal memuat QRIS dari storage:', e);
+        }
+    }
 
     // Drag & Drop Event Listeners on QRIS Dropzone
     if (qrisDropzone) {
@@ -519,6 +789,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Fallback for older browsers
                 }
                 processQrisFile(file);
+            }
+        });
+    }
+
+    if (btnChangeQris) {
+        btnChangeQris.addEventListener('click', function(e) {
+            e.preventDefault();
+            qrisFileInput.click();
+        });
+    }
+
+    if (btnForgetQris) {
+        btnForgetQris.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Hapus gambar QRIS yang tersimpan di browser ini?')) {
+                try {
+                    localStorage.removeItem('payme_saved_qris');
+                } catch (e) {}
+                if (savedQrisBanner) savedQrisBanner.classList.add('d-none');
+                qrisFileInput.value = '';
+                try {
+                    qrisFileInput.files = new DataTransfer().files;
+                } catch (e) {}
+                qrisStaticPayload.value = '';
+                qrisCanvas.classList.add('d-none');
+                qrisValidState.classList.add('d-none');
+                qrisInvalidState.classList.add('d-none');
+                qrisEmptyState.classList.remove('d-none');
             }
         });
     }
@@ -568,15 +866,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             thumbDataUrl = thumbCanvas.toDataURL('image/png');
                         } catch (e) {}
 
+                        let optimizedDataUrl = '';
                         try {
-                            localStorage.setItem('payme_saved_qris', JSON.stringify({
-                                payload: code.data,
-                                merchantName: validation.merchantName || 'Merchant QRIS',
-                                merchantCity: validation.location || 'Indonesia',
-                                thumbnail: thumbDataUrl,
-                                updated_at: new Date().toISOString()
-                            }));
+                            optimizedDataUrl = getOptimizedDataUrl(img, 800);
+                        } catch (e) {
+                            optimizedDataUrl = thumbDataUrl;
+                        }
+
+                        const savedObj = {
+                            payload: code.data,
+                            merchantName: validation.merchantName || 'Merchant QRIS',
+                            merchantCity: validation.location || 'Indonesia',
+                            thumbnail: thumbDataUrl,
+                            imageData: optimizedDataUrl,
+                            updated_at: new Date().toISOString()
+                        };
+
+                        try {
+                            localStorage.setItem('payme_saved_qris', JSON.stringify(savedObj));
                         } catch (err) {}
+
+                        updateSavedQrisBanner(savedObj);
                     } else {
                         qrisStaticPayload.value = '';
                         qrisValidState.classList.add('d-none');
@@ -630,6 +940,9 @@ document.addEventListener('DOMContentLoaded', function() {
             location: location
         };
     }
+
+    // Auto-load saved QRIS on page startup
+    loadSavedQrisOnStartup();
 
     // Client-side 1-by-1 Sequential Loop for Multi-Image Receipt Scanning
     receiptFileInput.addEventListener('change', async function(e) {
@@ -945,6 +1258,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.currency-input').forEach(input => {
                 input.value = parseRawNumber(input.value);
             });
+            if (toggleBankOption.checked) {
+                saveBanksToStorage();
+            }
             billForm.submit();
         });
     }
@@ -954,6 +1270,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.currency-input').forEach(input => {
             input.value = parseRawNumber(input.value);
         });
+        if (toggleBankOption.checked) {
+            saveBanksToStorage();
+        }
     });
 
     function formatRupiah(num) {

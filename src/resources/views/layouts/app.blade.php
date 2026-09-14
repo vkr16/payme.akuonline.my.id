@@ -923,7 +923,7 @@
                     if (data && data.payload) {
                         const validation = validateQrisPayload(data.payload);
                         if (validation.valid) {
-                            setValidQrisState(data.payload, validation.merchantName, validation.location, data.thumbnail || '', true);
+                            setValidQrisState(data.payload, validation.merchantName, validation.location, data.thumbnail || data.imageData || '', true, data.imageData || '');
                             return true;
                         }
                     }
@@ -968,13 +968,14 @@
         }
 
         // 3. Set Valid / Invalid UI States
-        function setValidQrisState(payload, merchantName, location, thumbnailSrc = '', fromSaved = false) {
+        function setValidQrisState(payload, merchantName, location, thumbnailSrc = '', fromSaved = false, fullImageData = '') {
             currentInstantPayload = payload;
             currentMerchantInfo = {
                 name: merchantName || 'Merchant QRIS',
                 city: location || 'Indonesia'
             };
             currentThumbnailUrl = thumbnailSrc;
+            const savedImageData = fullImageData || thumbnailSrc;
 
             instantMerchantNameText.innerText = currentMerchantInfo.name;
             instantMerchantCityText.innerText = currentMerchantInfo.city ? 'Lokasi: ' + currentMerchantInfo.city : '';
@@ -1014,6 +1015,7 @@
                         merchantName: currentMerchantInfo.name,
                         merchantCity: currentMerchantInfo.city,
                         thumbnail: currentThumbnailUrl,
+                        imageData: savedImageData || currentThumbnailUrl,
                         updated_at: new Date().toISOString()
                     }));
                 } catch (e) {}
@@ -1073,13 +1075,37 @@
                         thumbDataUrl = thumbCanvas.toDataURL('image/png');
                     } catch (e) {}
 
+                    let optimizedDataUrl = '';
+                    try {
+                        let w = img.width;
+                        let h = img.height;
+                        const maxDim = 800;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) {
+                                h = Math.round((h * maxDim) / w);
+                                w = maxDim;
+                            } else {
+                                w = Math.round((w * maxDim) / h);
+                                h = maxDim;
+                            }
+                        }
+                        const optCanvas = document.createElement('canvas');
+                        optCanvas.width = w;
+                        optCanvas.height = h;
+                        const optCtx = optCanvas.getContext('2d');
+                        optCtx.drawImage(img, 0, 0, w, h);
+                        optimizedDataUrl = optCanvas.toDataURL('image/jpeg', 0.85);
+                    } catch (e) {
+                        optimizedDataUrl = thumbDataUrl;
+                    }
+
                     const imageData = ctx.getImageData(0, 0, instantQrisCanvas.width, instantQrisCanvas.height);
                     if (typeof jsQR !== 'undefined') {
                         const code = jsQR(imageData.data, imageData.width, imageData.height);
                         if (code && code.data) {
                             const validation = validateQrisPayload(code.data);
                             if (validation.valid) {
-                                setValidQrisState(code.data, validation.merchantName, validation.location, thumbDataUrl, false);
+                                setValidQrisState(code.data, validation.merchantName, validation.location, thumbDataUrl, false, optimizedDataUrl);
                             } else {
                                 setInvalidQrisState(validation.reason);
                             }

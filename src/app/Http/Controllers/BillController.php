@@ -229,13 +229,18 @@ class BillController extends Controller
         }
 
         $totalBillSubtotal = $bill->subtotal;
-        $netExtraFees = $bill->net_extra_fees;
+        $deliveryFeeShare = 0;
+        $serviceFeeShare = 0;
+        $discountShare = 0;
+        $feeShare = 0;
 
         // Proportional fee calculation
-        $feeShare = 0;
         if ($totalBillSubtotal > 0 && $itemsSubtotal > 0) {
             $proportion = $itemsSubtotal / $totalBillSubtotal;
-            $feeShare = $proportion * $netExtraFees;
+            $deliveryFeeShare = (float) round($proportion * $bill->delivery_fee);
+            $serviceFeeShare = (float) round($proportion * $bill->service_fee);
+            $discountShare = (float) round($proportion * $bill->discount);
+            $feeShare = ($deliveryFeeShare + $serviceFeeShare) - $discountShare;
         }
 
         $exactPayable = round($itemsSubtotal + $feeShare);
@@ -261,6 +266,13 @@ class BillController extends Controller
             'success' => true,
             'items_subtotal' => $itemsSubtotal,
             'fee_share' => $feeShare,
+            'delivery_fee_share' => $deliveryFeeShare,
+            'service_fee_share' => $serviceFeeShare,
+            'discount_share' => $discountShare,
+            'total_delivery_fee' => (float) $bill->delivery_fee,
+            'total_service_fee' => (float) $bill->service_fee,
+            'total_discount' => (float) $bill->discount,
+            'total_bill_subtotal' => (float) $totalBillSubtotal,
             'exact_payable' => $exactPayable,
             'round_up_extra' => $roundUpExtra,
             'total_payable' => $totalPayable,
@@ -319,12 +331,17 @@ class BillController extends Controller
         }
 
         $totalBillSubtotal = $bill->subtotal;
-        $netExtraFees = $bill->net_extra_fees;
-
+        $deliveryFeeShare = 0;
+        $serviceFeeShare = 0;
+        $discountShare = 0;
         $feeShare = 0;
+
         if ($totalBillSubtotal > 0 && $itemsSubtotal > 0) {
             $proportion = $itemsSubtotal / $totalBillSubtotal;
-            $feeShare = $proportion * $netExtraFees;
+            $deliveryFeeShare = (float) round($proportion * $bill->delivery_fee);
+            $serviceFeeShare = (float) round($proportion * $bill->service_fee);
+            $discountShare = (float) round($proportion * $bill->discount);
+            $feeShare = ($deliveryFeeShare + $serviceFeeShare) - $discountShare;
         }
 
         $exactPaid = round($itemsSubtotal + $feeShare);
