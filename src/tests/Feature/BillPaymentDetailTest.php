@@ -145,4 +145,43 @@ class BillPaymentDetailTest extends TestCase
             'amount' => 22000,
         ]);
     }
+
+    public function test_bill_page_renders_claim_history_items_and_detail_modal(): void
+    {
+        $bill = Bill::create([
+            'title' => 'Makan Siang Tim',
+            'host_name' => 'Ahmad Host',
+            'slug' => 'detailmodaltest',
+            'delivery_fee' => 12000,
+            'service_fee' => 4000,
+            'discount' => 6000,
+        ]);
+
+        $item1 = $bill->items()->create([
+            'name' => 'Ayam Bakar Madu',
+            'qty' => 2,
+            'price' => 25000,
+        ]);
+
+        $claim = $bill->claims()->create([
+            'payer_name' => 'Dimas',
+            'amount' => 30000,
+            'payment_method' => 'QRIS',
+        ]);
+
+        $claim->claimItems()->create([
+            'bill_item_id' => $item1->id,
+            'qty' => 1,
+        ]);
+
+        $res = $this->get('/b/' . $bill->slug);
+
+        $res->assertStatus(200);
+        $res->assertSee('claim-history-item');
+        $res->assertSee('data-claim-id="' . $claim->id . '"', false);
+        $res->assertSee('id="claimDetailModal"', false);
+        $res->assertSee('window.claimDetailsData', false);
+        $res->assertSee('Rincian & Proporsi', false);
+        $res->assertSee('Proporsi Beban Pesanan');
+    }
 }

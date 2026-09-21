@@ -17,6 +17,19 @@
 @section('meta_image', $pageOgImage)
 
 @section('content')
+<style>
+.claim-history-item {
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+.claim-history-item:hover, .claim-history-item:focus-visible {
+    border-color: rgba(2, 132, 199, 0.45) !important;
+    background-color: #f8fafc !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.1) !important;
+    transform: translateY(-1px);
+}
+</style>
 <div class="row justify-content-center overflow-hidden">
     <div class="col-lg-8 position-relative overflow-hidden">
 
@@ -398,17 +411,28 @@
         <!-- List Pembayar yang Sudah Bayar -->
         <div class="card shadow-sm border-0 mb-5">
             <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold text-dark fs-6 d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-users text-success"></i>
-                    <span>Riwayat Pembayaran ({{ $bill->claims->count() }})</span>
-                </h5>
-                <small class="text-muted d-block mt-1">Daftar anggota yang sudah konfirmasi bayar</small>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h5 class="mb-0 fw-bold text-dark fs-6 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-users text-success"></i>
+                        <span>Riwayat Pembayaran ({{ $bill->claims->count() }})</span>
+                    </h5>
+                    @if($bill->claims->count() > 0)
+                        <span class="badge bg-light text-muted border small fw-normal">
+                            <i class="fa-solid fa-hand-pointer me-1 text-primary"></i> Klik kartu untuk rincian
+                        </span>
+                    @endif
+                </div>
+                <small class="text-muted d-block mt-1">Daftar anggota yang sudah konfirmasi bayar &bull; Klik kartu untuk melihat rincian & proporsi pesanan</small>
             </div>
             <div class="card-body p-4">
                 @if($bill->claims->count() > 0)
                     <div class="vstack gap-2">
                         @foreach($bill->claims->sortByDesc('created_at') as $claim)
-                            <div class="p-3 rounded-3 bg-white border shadow-xs mb-2">
+                            <div class="p-3 rounded-3 bg-white border shadow-xs mb-2 claim-history-item"
+                                 data-claim-id="{{ $claim->id }}"
+                                 role="button"
+                                 tabindex="0"
+                                 title="Klik untuk melihat rincian pembayaran {{ $claim->payer_name }}">
                                 <!-- Top Row: Name, Status Badges & Nominal -->
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pb-2 mb-2 border-bottom border-light">
                                     <div class="d-flex flex-wrap align-items-center gap-2">
@@ -433,13 +457,16 @@
                                             </span>
                                         @endif
                                     </div>
-                                    <div class="text-end">
-                                        <span class="fw-extrabold text-success fs-5">Rp {{ number_format($claim->amount, 0, ',', '.') }}</span>
-                                        @if($claim->surplus > 0)
-                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 d-block mt-1 fw-medium" style="font-size: 0.72rem;">
-                                                <i class="fa-solid fa-heart text-danger me-1"></i> +Rp {{ number_format($claim->surplus, 0, ',', '.') }} Tip / Pembulatan
-                                            </span>
-                                        @endif
+                                    <div class="text-end d-flex align-items-center gap-2">
+                                        <div>
+                                            <span class="fw-extrabold text-success fs-5">Rp {{ number_format($claim->amount, 0, ',', '.') }}</span>
+                                            @if($claim->surplus > 0)
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 d-block mt-1 fw-medium" style="font-size: 0.72rem;">
+                                                    <i class="fa-solid fa-heart text-danger me-1"></i> +Rp {{ number_format($claim->surplus, 0, ',', '.') }} Tip / Pembulatan
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-muted fs-6 ms-1 d-none d-sm-inline-block"></i>
                                     </div>
                                 </div>
 
@@ -455,7 +482,12 @@
                                             @endforeach
                                         </div>
                                     </div>
-                                    <small class="text-muted ms-auto flex-shrink-0" style="font-size: 0.72rem;">{{ $claim->created_at->diffForHumans() }}</small>
+                                    <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 small py-1 px-2">
+                                            <i class="fa-solid fa-receipt me-1"></i> Rincian & Proporsi
+                                        </span>
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ $claim->created_at->diffForHumans() }}</small>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -510,6 +542,52 @@
 
                 <h3 class="fw-extrabold text-primary display-6 my-2" id="modalNominalDisplay">Rp 0</h3>
                 <p class="text-muted small mb-3" id="modalNominalSubtext">Nominal pembayaran sudah terkunci otomatis di QR Code ini.</p>
+
+                <!-- RINCIAN ITEM PESANAN & BIAYA YANG DIBAYAR -->
+                <div class="p-3 rounded-3 bg-light border text-start mb-3 shadow-xs">
+                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                        <span class="fw-bold text-dark small d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-list-check text-primary"></i>
+                            <span>Item Pesanan Yang Dibayar</span>
+                        </span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 small" id="qrisModalItemCountBadge">
+                            0 Item
+                        </span>
+                    </div>
+
+                    <!-- List item terpilih -->
+                    <div id="qrisModalItemsList" class="vstack gap-2 mb-2"></div>
+
+                    <!-- Rincian Breakdown Biaya / Diskon -->
+                    <div class="pt-2 border-top border-light vstack gap-1 small" style="font-size: 0.78rem;">
+                        <div class="d-flex justify-content-between text-muted">
+                            <span>Subtotal Item:</span>
+                            <span class="fw-semibold text-dark" id="qrisModalSubtotal">Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted" id="qrisModalDeliveryRow">
+                            <span><i class="fa-solid fa-motorcycle text-primary me-1"></i> Proporsi Ongkir:</span>
+                            <span class="fw-semibold text-dark" id="qrisModalDeliveryShare">+Rp 0</span>
+                        </div>
+                        @if($bill->service_fee > 0)
+                        <div class="d-flex justify-content-between text-muted" id="qrisModalServiceRow">
+                            <span><i class="fa-solid fa-bell-concierge text-secondary me-1"></i> Proporsi Biaya Layanan:</span>
+                            <span class="fw-semibold text-dark" id="qrisModalServiceShare">+Rp 0</span>
+                        </div>
+                        @endif
+                        <div class="d-flex justify-content-between text-success" id="qrisModalDiscountRow">
+                            <span><i class="fa-solid fa-tags text-success me-1"></i> Proporsi Diskon:</span>
+                            <span class="fw-bold text-success" id="qrisModalDiscountShare">-Rp 0</span>
+                        </div>
+                        <div class="d-none justify-content-between text-primary" id="qrisModalRoundUpRow">
+                            <span><i class="fa-solid fa-arrow-trend-up text-primary me-1"></i> Pembulatan ke Atas (Tip):</span>
+                            <span class="fw-semibold text-primary" id="qrisModalRoundUpAmount">+Rp 0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top fw-bold text-dark" style="font-size: 0.85rem;">
+                            <span>Total Ditagihkan:</span>
+                            <span class="text-primary fs-6" id="qrisModalTotalPayable">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Canvas / QR Code Render Area -->
                 <div class="p-3 bg-white rounded border d-inline-block shadow-sm mb-3" id="modalQrCodeContainer"></div>
@@ -664,10 +742,203 @@
     </div>
 </div>
 @endif
+
+<!-- CLAIM DETAIL MODAL -->
+<div class="modal fade" id="claimDetailModal" tabindex="-1" aria-labelledby="claimDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content glass-modal border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light py-3">
+                <h5 class="modal-title fw-bold text-dark fs-6 d-flex align-items-center" id="claimDetailModalLabel">
+                    <i class="fa-solid fa-receipt text-primary me-2 fs-5"></i>
+                    <span>Rincian Pembayaran Anggota</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Header: Payer Info & Total Amount -->
+                <div class="p-3 rounded-3 bg-light border mb-3">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-5 shadow-sm flex-shrink-0" style="width: 44px; height: 44px;" id="detailPayerInitial">
+                                U
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0 fs-6" id="detailPayerName">-</h6>
+                                <small class="text-muted d-block" style="font-size: 0.75rem;" id="detailTimestamp">-</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 mb-1 d-inline-block">
+                                <i class="fa-solid fa-circle-check me-1"></i> Lunas
+                            </span>
+                            <div id="detailMethodBadge"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-baseline justify-content-between pt-2 border-top border-light">
+                        <span class="text-muted small fw-medium">Total Nominal Dibayar:</span>
+                        <div class="text-end">
+                            <span class="fw-extrabold text-success fs-4" id="detailAmountPaid">Rp 0</span>
+                            <div class="d-none" id="detailSurplusBadge">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1 small" id="detailSurplusText">
+                                    <i class="fa-solid fa-heart text-danger me-1"></i> +Rp 0 Tip / Pembulatan
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proporsi Pembayaran Section -->
+                <div class="card border mb-3">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="fw-bold text-dark small d-flex align-items-center gap-1.5">
+                                <i class="fa-solid fa-chart-pie text-primary"></i>
+                                <span>Proporsi Beban Pesanan</span>
+                            </span>
+                            <span class="badge bg-primary text-white fw-bold px-2 py-1" id="detailProportionBadge">0%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" id="detailProportionBar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <small class="text-muted d-block" style="font-size: 0.75rem;" id="detailProportionDesc">
+                            Kontribusi terhadap total tagihan pesanan.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Daftar Item Menu yang Diklaim -->
+                <div class="card border mb-3">
+                    <div class="card-header bg-light py-2 px-3 fw-semibold small text-muted d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-utensils me-1"></i> Menu yang Dipesan (<span id="detailItemCount">0</span>)</span>
+                        <span>Subtotal</span>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 200px; overflow-y: auto;">
+                        <ul class="list-group list-group-flush small" id="detailItemsList">
+                            <!-- Populated via JS -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Kalkulasi & Proporsi Biaya Tambahan -->
+                <div class="p-3 rounded-3 bg-light border mb-2">
+                    <h6 class="fw-bold text-dark small mb-2 d-flex align-items-center gap-1">
+                        <i class="fa-solid fa-calculator text-primary"></i>
+                        <span>Rincian Pembagian Biaya</span>
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted">
+                        <span>Subtotal Menu Pesanan:</span>
+                        <span class="fw-semibold text-dark" id="detailItemsSubtotal">Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted d-none" id="detailRowDelivery">
+                        <span id="detailDeliveryLabel">Proporsi Ongkir:</span>
+                        <span class="fw-semibold text-dark" id="detailShareDelivery">+Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted d-none" id="detailRowService">
+                        <span id="detailServiceLabel">Proporsi Biaya Layanan:</span>
+                        <span class="fw-semibold text-dark" id="detailShareService">+Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted d-none" id="detailRowDiscount">
+                        <span id="detailDiscountLabel">Proporsi Diskon:</span>
+                        <span class="fw-semibold text-danger" id="detailShareDiscount">-Rp 0</span>
+                    </div>
+                    <hr class="my-2 border-light">
+                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                        <span class="text-dark fw-medium">Beban Pokok Seharusnya:</span>
+                        <span class="fw-bold text-dark" id="detailExactPayable">Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1 small text-muted d-none" id="detailRowSurplus">
+                        <span>Tip / Pembulatan ke Atas:</span>
+                        <span class="fw-semibold text-primary" id="detailShareSurplus">+Rp 0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="fw-bold text-dark">TOTAL DIBAYARKAN:</span>
+                        <span class="fw-extrabold text-success fs-5" id="detailFinalAmount">Rp 0</span>
+                    </div>
+                </div>
+
+                <!-- Info Patungan Ref -->
+                <div class="text-center mt-2">
+                    <small class="text-muted" style="font-size: 0.72rem;">
+                        Pesanan: <strong>{{ $bill->title }}</strong> &bull; Host: <strong>{{ $bill->host_name }}</strong>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light py-2 px-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3" id="btnCopyClaimSummary">
+                    <i class="fa-solid fa-copy me-1"></i> <span id="btnCopyClaimText">Salin Rincian</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary btn-pill px-4" data-bs-dismiss="modal">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script>
+window.claimDetailsData = {
+@foreach($bill->claims as $c)
+    @php
+        $cItems = [];
+        $cItemsSubtotal = 0;
+        foreach($c->claimItems as $cItem) {
+            $name = $cItem->item->name ?? 'Item';
+            $qty = (int)$cItem->qty;
+            $price = (float)($cItem->item->price ?? 0);
+            $subtotal = $qty * $price;
+            $cItemsSubtotal += $subtotal;
+            $cItems[] = [
+                'name' => $name,
+                'qty' => $qty,
+                'price' => $price,
+                'subtotal' => $subtotal,
+            ];
+        }
+
+        $totSub = (float)$bill->subtotal;
+        $prop = $totSub > 0 ? ($cItemsSubtotal / $totSub) : 0;
+        $propPercent = round($prop * 100, 1);
+
+        $shareDeliv = round($prop * (float)$bill->delivery_fee);
+        $shareServ = round($prop * (float)$bill->service_fee);
+        $shareDisc = round($prop * (float)$bill->discount);
+
+        $exactPayable = (float)$c->exact_payable;
+        $amountPaid = (float)$c->amount;
+        $surplus = (float)$c->surplus;
+
+        $monthNames = [1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'];
+        $timeFormatted = $c->created_at ? ($c->created_at->format('d') . ' ' . ($monthNames[(int)$c->created_at->format('n')] ?? $c->created_at->format('M')) . ' ' . $c->created_at->format('Y') . ', ' . $c->created_at->format('H:i') . ' WIB') : '-';
+        $timeRelative = $c->created_at ? $c->created_at->diffForHumans() : '';
+    @endphp
+    {{ $c->id }}: {
+        id: {{ $c->id }},
+        payer_name: {!! json_encode($c->payer_name) !!},
+        amount: {{ $amountPaid }},
+        payment_method: {!! json_encode($c->payment_method ?? 'QRIS') !!},
+        created_at_formatted: {!! json_encode($timeFormatted) !!},
+        created_at_relative: {!! json_encode($timeRelative) !!},
+        items_subtotal: {{ $cItemsSubtotal }},
+        bill_subtotal: {{ $totSub }},
+        proportion_percent: {{ $propPercent }},
+        bill_delivery_fee: {{ (float)$bill->delivery_fee }},
+        bill_service_fee: {{ (float)$bill->service_fee }},
+        bill_discount: {{ (float)$bill->discount }},
+        share_delivery: {{ $shareDeliv }},
+        share_service: {{ $shareServ }},
+        share_discount: {{ $shareDisc }},
+        exact_payable: {{ $exactPayable }},
+        surplus: {{ $surplus }},
+        items: {!! json_encode($cItems) !!},
+        bill_title: {!! json_encode($bill->title) !!},
+        host_name: {!! json_encode($bill->host_name) !!}
+    },
+@endforeach
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     const billSlug = "{{ $bill->slug }}";
     const totalBillSubtotal = {{ $bill->subtotal }};
@@ -702,6 +973,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalQrCodeContainer = document.getElementById('modalQrCodeContainer');
     const btnDownloadQr = document.getElementById('btnDownloadQr');
     const btnCopyQrisString = document.getElementById('btnCopyQrisString');
+
+    // QRIS Modal Item Breakdown Elements
+    const qrisModalItemCountBadge = document.getElementById('qrisModalItemCountBadge');
+    const qrisModalItemsList = document.getElementById('qrisModalItemsList');
+    const qrisModalSubtotal = document.getElementById('qrisModalSubtotal');
+    const qrisModalDeliveryRow = document.getElementById('qrisModalDeliveryRow');
+    const qrisModalDeliveryShare = document.getElementById('qrisModalDeliveryShare');
+    const qrisModalServiceRow = document.getElementById('qrisModalServiceRow');
+    const qrisModalServiceShare = document.getElementById('qrisModalServiceShare');
+    const qrisModalDiscountRow = document.getElementById('qrisModalDiscountRow');
+    const qrisModalDiscountShare = document.getElementById('qrisModalDiscountShare');
+    const qrisModalRoundUpRow = document.getElementById('qrisModalRoundUpRow');
+    const qrisModalRoundUpAmount = document.getElementById('qrisModalRoundUpAmount');
+    const qrisModalTotalPayable = document.getElementById('qrisModalTotalPayable');
 
     const btnTriggerClaimModal = document.getElementById('btnTriggerClaimModal');
     const btnOpenClaimFromModal = document.getElementById('btnOpenClaimFromModal');
@@ -1014,6 +1299,80 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalMerchantName.innerText = data.merchant_name || 'Merchant';
                 modalNominalDisplay.innerText = formatRupiah(data.total_payable);
 
+                // Render list item & rincian biaya di Modal QRIS
+                if (qrisModalItemCountBadge) {
+                    qrisModalItemCountBadge.innerText = `${selection.itemsList.length} Item`;
+                }
+
+                if (qrisModalItemsList) {
+                    let itemsHtml = '';
+                    selection.itemsList.forEach(item => {
+                        const itemSubtotal = item.qty * item.price;
+                        itemsHtml += `
+                            <div class="d-flex justify-content-between align-items-start py-1 border-bottom border-light">
+                                <div class="me-2">
+                                    <div class="fw-semibold text-dark small">${escapeHtml(item.name)}</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">${item.qty} &times; ${formatRupiah(item.price)}</div>
+                                </div>
+                                <div class="fw-semibold text-dark text-nowrap small">${formatRupiah(itemSubtotal)}</div>
+                            </div>
+                        `;
+                    });
+                    qrisModalItemsList.innerHTML = itemsHtml;
+                }
+
+                if (qrisModalSubtotal) {
+                    qrisModalSubtotal.innerText = formatRupiah(data.items_subtotal ?? selection.subtotal);
+                }
+
+                if (qrisModalDeliveryShare) {
+                    qrisModalDeliveryShare.innerText = '+' + formatRupiah(data.delivery_fee_share ?? selection.deliveryFeeShare);
+                }
+                if (qrisModalDeliveryRow) {
+                    if ((data.total_delivery_fee ?? 0) <= 0) {
+                        qrisModalDeliveryRow.classList.add('d-none');
+                    } else {
+                        qrisModalDeliveryRow.classList.remove('d-none');
+                    }
+                }
+
+                if (qrisModalServiceShare) {
+                    qrisModalServiceShare.innerText = '+' + formatRupiah(data.service_fee_share ?? selection.serviceFeeShare);
+                }
+                if (qrisModalServiceRow) {
+                    if ((data.total_service_fee ?? 0) <= 0) {
+                        qrisModalServiceRow.classList.add('d-none');
+                    } else {
+                        qrisModalServiceRow.classList.remove('d-none');
+                    }
+                }
+
+                if (qrisModalDiscountShare) {
+                    qrisModalDiscountShare.innerText = '-' + formatRupiah(data.discount_share ?? selection.discountShare);
+                }
+                if (qrisModalDiscountRow) {
+                    if ((data.total_discount ?? 0) <= 0) {
+                        qrisModalDiscountRow.classList.add('d-none');
+                    } else {
+                        qrisModalDiscountRow.classList.remove('d-none');
+                    }
+                }
+
+                if (qrisModalRoundUpRow && qrisModalRoundUpAmount) {
+                    if (isRoundUp && (data.round_up_extra > 0)) {
+                        qrisModalRoundUpRow.classList.remove('d-none');
+                        qrisModalRoundUpRow.classList.add('d-flex');
+                        qrisModalRoundUpAmount.innerText = '+Rp ' + data.round_up_extra.toLocaleString('id-ID');
+                    } else {
+                        qrisModalRoundUpRow.classList.add('d-none');
+                        qrisModalRoundUpRow.classList.remove('d-flex');
+                    }
+                }
+
+                if (qrisModalTotalPayable) {
+                    qrisModalTotalPayable.innerText = formatRupiah(data.total_payable);
+                }
+
                 if (modalToggleRoundUp) {
                     modalToggleRoundUp.checked = isRoundUp;
                 }
@@ -1316,6 +1675,214 @@ document.addEventListener('DOMContentLoaded', function() {
             currency: 'IDR',
             minimumFractionDigits: 0
         }).format(num);
+    }
+
+    // CLAIM DETAIL MODAL INTERACTIONS
+    const claimDetailModalEl = document.getElementById('claimDetailModal');
+    const claimDetailModal = claimDetailModalEl ? new bootstrap.Modal(claimDetailModalEl) : null;
+    let activeClaimData = null;
+
+    document.querySelectorAll('.claim-history-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const claimId = this.dataset.claimId;
+            openClaimDetail(claimId);
+        });
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const claimId = this.dataset.claimId;
+                openClaimDetail(claimId);
+            }
+        });
+    });
+
+    function openClaimDetail(claimId) {
+        if (!window.claimDetailsData || !window.claimDetailsData[claimId]) return;
+        const data = window.claimDetailsData[claimId];
+        activeClaimData = data;
+
+        // Payer Initial & Name
+        const initial = (data.payer_name || 'U').trim().charAt(0).toUpperCase();
+        document.getElementById('detailPayerInitial').innerText = initial;
+        document.getElementById('detailPayerName').innerText = data.payer_name;
+        document.getElementById('detailTimestamp').innerText = `${data.created_at_formatted} (${data.created_at_relative})`;
+
+        // Payment Method Badge
+        const pm = (data.payment_method || 'qris').toLowerCase();
+        let methodHtml = '';
+        if (pm.includes('cash') || pm.includes('tunai')) {
+            methodHtml = `<span class="badge bg-emerald bg-opacity-10 text-emerald border border-emerald border-opacity-25" style="background: rgba(16, 185, 129, 0.1); color: #059669; border-color: rgba(16, 185, 129, 0.25);"><i class="fa-solid fa-money-bill-wave me-1"></i> Cash / Tunai</span>`;
+        } else if (pm.includes('qris')) {
+            methodHtml = `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"><i class="fa-solid fa-qrcode me-1"></i> QRIS</span>`;
+        } else {
+            methodHtml = `<span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50"><i class="fa-solid fa-building-columns text-warning me-1"></i> ${escapeHtml(data.payment_method)}</span>`;
+        }
+        document.getElementById('detailMethodBadge').innerHTML = methodHtml;
+
+        // Amount & Surplus
+        document.getElementById('detailAmountPaid').innerText = formatRupiah(data.amount);
+        const surplusBadge = document.getElementById('detailSurplusBadge');
+        if (data.surplus > 0) {
+            surplusBadge.classList.remove('d-none');
+            document.getElementById('detailSurplusText').innerHTML = `<i class="fa-solid fa-heart text-danger me-1"></i> +${formatRupiah(data.surplus)} Tip / Pembulatan`;
+        } else {
+            surplusBadge.classList.add('d-none');
+        }
+
+        // Proportion
+        document.getElementById('detailProportionBadge').innerText = `${data.proportion_percent}%`;
+        const barWidth = Math.min(100, Math.max(3, data.proportion_percent));
+        document.getElementById('detailProportionBar').style.width = `${barWidth}%`;
+        document.getElementById('detailProportionBar').setAttribute('aria-valuenow', data.proportion_percent);
+        document.getElementById('detailProportionDesc').innerHTML = `Memegang <strong>${data.proportion_percent}%</strong> dari total tagihan pesanan menu (${formatRupiah(data.items_subtotal)} dari total menu ${formatRupiah(data.bill_subtotal)}).`;
+
+        // Claimed Items List
+        const itemsList = document.getElementById('detailItemsList');
+        itemsList.innerHTML = '';
+        let totalItemsQty = 0;
+        if (data.items && data.items.length > 0) {
+            data.items.forEach(item => {
+                totalItemsQty += item.qty;
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center py-2 px-3';
+                li.innerHTML = `
+                    <div>
+                        <span class="fw-semibold text-dark">${escapeHtml(item.name)}</span>
+                        <small class="text-muted d-block">${item.qty}x @ ${formatRupiah(item.price)}</small>
+                    </div>
+                    <span class="fw-bold text-dark">${formatRupiah(item.subtotal)}</span>
+                `;
+                itemsList.appendChild(li);
+            });
+        } else {
+            itemsList.innerHTML = `<li class="list-group-item text-center text-muted py-2">Tidak ada rincian item</li>`;
+        }
+        document.getElementById('detailItemCount').innerText = `${totalItemsQty} item`;
+
+        // Cost Breakdown & Proportions
+        document.getElementById('detailItemsSubtotal').innerText = formatRupiah(data.items_subtotal);
+
+        // Delivery Fee
+        const rowDelivery = document.getElementById('detailRowDelivery');
+        if (data.bill_delivery_fee > 0) {
+            rowDelivery.classList.remove('d-none');
+            document.getElementById('detailDeliveryLabel').innerText = `Proporsi Ongkir (${data.proportion_percent}% dr ${formatRupiah(data.bill_delivery_fee)}):`;
+            document.getElementById('detailShareDelivery').innerText = `+${formatRupiah(data.share_delivery)}`;
+        } else {
+            rowDelivery.classList.add('d-none');
+        }
+
+        // Service Fee
+        const rowService = document.getElementById('detailRowService');
+        if (data.bill_service_fee > 0) {
+            rowService.classList.remove('d-none');
+            document.getElementById('detailServiceLabel').innerText = `Proporsi Layanan (${data.proportion_percent}% dr ${formatRupiah(data.bill_service_fee)}):`;
+            document.getElementById('detailShareService').innerText = `+${formatRupiah(data.share_service)}`;
+        } else {
+            rowService.classList.add('d-none');
+        }
+
+        // Discount
+        const rowDiscount = document.getElementById('detailRowDiscount');
+        if (data.bill_discount > 0) {
+            rowDiscount.classList.remove('d-none');
+            document.getElementById('detailDiscountLabel').innerText = `Proporsi Diskon Promo (${data.proportion_percent}% dr ${formatRupiah(data.bill_discount)}):`;
+            document.getElementById('detailShareDiscount').innerText = `-${formatRupiah(data.share_discount)}`;
+        } else {
+            rowDiscount.classList.add('d-none');
+        }
+
+        // Exact Payable & Surplus
+        document.getElementById('detailExactPayable').innerText = formatRupiah(data.exact_payable);
+
+        const rowSurplus = document.getElementById('detailRowSurplus');
+        if (data.surplus > 0) {
+            rowSurplus.classList.remove('d-none');
+            document.getElementById('detailShareSurplus').innerText = `+${formatRupiah(data.surplus)}`;
+        } else {
+            rowSurplus.classList.add('d-none');
+        }
+
+        document.getElementById('detailFinalAmount').innerText = formatRupiah(data.amount);
+
+        // Reset copy button state
+        const btnCopy = document.getElementById('btnCopyClaimSummary');
+        if (btnCopy) {
+            btnCopy.className = 'btn btn-sm btn-outline-primary btn-pill px-3';
+            btnCopy.innerHTML = '<i class="fa-solid fa-copy me-1"></i> <span id="btnCopyClaimText">Salin Rincian</span>';
+        }
+
+        if (claimDetailModal) {
+            claimDetailModal.show();
+        }
+    }
+
+    // Copy Claim Summary
+    const btnCopyClaimSummary = document.getElementById('btnCopyClaimSummary');
+    if (btnCopyClaimSummary) {
+        btnCopyClaimSummary.addEventListener('click', function() {
+            if (!activeClaimData) return;
+            const text = generateClaimShareText(activeClaimData);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.className = 'btn btn-sm btn-success btn-pill px-3';
+                    this.innerHTML = '<i class="fa-solid fa-check me-1"></i> Tersalin!';
+                    setTimeout(() => {
+                        this.className = 'btn btn-sm btn-outline-primary btn-pill px-3';
+                        this.innerHTML = '<i class="fa-solid fa-copy me-1"></i> <span id="btnCopyClaimText">Salin Rincian</span>';
+                    }, 2000);
+                }).catch(() => {
+                    alert('Gagal menyalin ke clipboard.');
+                });
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                this.className = 'btn btn-sm btn-success btn-pill px-3';
+                this.innerHTML = '<i class="fa-solid fa-check me-1"></i> Tersalin!';
+                setTimeout(() => {
+                    this.className = 'btn btn-sm btn-outline-primary btn-pill px-3';
+                    this.innerHTML = '<i class="fa-solid fa-copy me-1"></i> <span id="btnCopyClaimText">Salin Rincian</span>';
+                }, 2000);
+            }
+        });
+    }
+
+    function generateClaimShareText(data) {
+        let text = `🧾 *Rincian Pembayaran Patungan*\n`;
+        text += `📌 Pesanan: ${data.bill_title}\n`;
+        text += `👤 Pembayar: *${data.payer_name}*\n`;
+        text += `✅ Status: Lunas (${data.payment_method})\n`;
+        text += `🕒 Waktu: ${data.created_at_formatted}\n\n`;
+
+        text += `📋 *Menu yang Dipesan:*\n`;
+        if (data.items && data.items.length > 0) {
+            data.items.forEach(i => {
+                text += `• ${i.name} (${i.qty}x @ ${formatRupiah(i.price)}) = ${formatRupiah(i.subtotal)}\n`;
+            });
+        }
+        text += `Subtotal Menu: ${formatRupiah(data.items_subtotal)}\n\n`;
+
+        text += `📊 *Proporsi Pesanan (${data.proportion_percent}%):*\n`;
+        if (data.bill_delivery_fee > 0) {
+            text += `• Proporsi Ongkir: +${formatRupiah(data.share_delivery)}\n`;
+        }
+        if (data.bill_service_fee > 0) {
+            text += `• Proporsi Layanan: +${formatRupiah(data.share_service)}\n`;
+        }
+        if (data.bill_discount > 0) {
+            text += `• Proporsi Diskon: -${formatRupiah(data.share_discount)}\n`;
+        }
+        text += `Beban Pokok: ${formatRupiah(data.exact_payable)}\n`;
+        if (data.surplus > 0) {
+            text += `Tip / Pembulatan: +${formatRupiah(data.surplus)}\n`;
+        }
+        text += `\n💰 *Total Nominal Dibayar: ${formatRupiah(data.amount)}*\n`;
+        text += `\n_Ditalangin oleh ${data.host_name} via PayMe_`;
+        return text;
     }
 
     function escapeHtml(str) {
