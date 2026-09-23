@@ -397,33 +397,53 @@
 <body class="text-dark">
     <!-- Navbar (Glassmorphism Header) -->
     <nav class="navbar navbar-expand-lg navbar-light navbar-glass sticky-top py-2">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('bills.create') }}">
-                <img src="{{ asset('images/qrlogo.png') }}" alt="PayMe" width="38" height="38" class="d-inline-block rounded-3 brand-logo-glow">
-                <div class="d-flex flex-column lh-1 ms-3">
-                    <span class="fw-extrabold text-dark fs-4 mb-0 tracking-tight" style="letter-spacing: -0.03em;">PayMe</span>
-                    <span class="text-muted fw-medium" style="font-size: 0.68rem; margin-top: 2px;">by AkuOnline</span>
+        <div class="container d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2">
+            <!-- Row 1 di Mobile: Brand Logo di kiri & Quick Utility Buttons di kanan -->
+            <div class="d-flex align-items-center justify-content-between">
+                <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="{{ route('bills.create') }}">
+                    <img src="{{ asset('images/qrlogo.png') }}" alt="PayMe" width="34" height="34" class="d-inline-block rounded-3 brand-logo-glow">
+                    <div class="d-flex flex-column lh-1 ms-2">
+                        <span class="fw-extrabold text-dark fs-5 mb-0 tracking-tight" style="letter-spacing: -0.03em;">PayMe</span>
+                        <span class="text-muted fw-medium" style="font-size: 0.65rem; margin-top: 1px;">by AkuOnline</span>
+                    </div>
+                </a>
+
+                <!-- Utility / Helper Buttons (Mobile inline dengan brand, Desktop menyatu di kanan) -->
+                <div class="d-flex d-md-none align-items-center gap-1">
+                    <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-2 py-1 fw-semibold d-flex align-items-center gap-1 shadow-xs" data-bs-toggle="modal" data-bs-target="#instantQrisModal" title="QR Instant" style="font-size: 0.75rem;">
+                        <i class="fa-solid fa-bolt text-warning"></i>
+                        <span>QR Instan</span>
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-2 py-1 shadow-xs d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#coffeeModal" title="Traktir Kopi" style="font-size: 0.75rem;">
+                        <i class="fa-solid fa-mug-hot text-dark"></i>
+                        <span>Kopi</span>
+                    </button>
                 </div>
-            </a>
-            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 ms-auto">
-                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-2 px-sm-3 fw-semibold d-flex align-items-center gap-1 gap-sm-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#instantQrisModal">
+            </div>
+
+            <!-- Row 2 di Mobile: Main Feature Action Buttons (Buat Invoice & Buat Patungan) -->
+            <div class="d-flex align-items-center justify-content-end gap-2">
+                <!-- Desktop Utility Buttons -->
+                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-none d-md-flex align-items-center gap-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#instantQrisModal">
                     <i class="fa-solid fa-bolt text-warning"></i>
                     <span>QR Instant</span>
                 </button>
-                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-2 px-sm-3 fw-semibold d-flex align-items-center gap-1 gap-sm-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-none d-lg-flex align-items-center gap-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
                     <i class="fa-solid fa-shield-halved text-primary"></i>
-                    <span class="d-none d-sm-inline">Privasi & Retensi Data</span>
+                    <span>Privasi & Retensi Data</span>
                 </button>
-                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-2 px-sm-3 shadow-xs d-flex align-items-center gap-1 gap-sm-2" data-bs-toggle="modal" data-bs-target="#coffeeModal">
+                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-3 shadow-xs d-none d-md-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#coffeeModal">
                     <i class="fa-solid fa-mug-hot text-dark"></i>
-                    <span class="d-none d-md-inline">Traktir Kopi</span>
+                    <span>Traktir Kopi</span>
                 </button>
-                <a href="{{ route('invoices.create') }}" class="btn {{ request()->routeIs('invoices.*') ? 'btn-primary text-white' : 'btn-outline-primary' }} btn-sm btn-pill px-2 px-sm-3 fw-semibold d-flex align-items-center gap-1 gap-sm-2 shadow-xs position-relative">
+
+                <!-- Primary Action Buttons (Full width flex-fill di mobile 2-row layout) -->
+                <a href="{{ route('invoices.create') }}" class="btn {{ request()->routeIs('invoices.*') ? 'btn-primary text-white' : 'btn-outline-primary' }} btn-sm btn-pill px-3 py-1 py-md-2 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-xs flex-fill flex-md-grow-0 position-relative" style="font-size: 0.85rem;">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                     <span>Buat Invoice</span>
                     <span class="badge bg-warning text-dark border border-warning-subtle fw-bold rounded-pill" style="font-size: 0.65rem; padding: 2px 6px;">Beta</span>
                 </a>
-                <a href="{{ route('bills.create') }}" class="btn {{ request()->routeIs('bills.*') ? 'btn-gradient-primary' : 'btn-outline-secondary' }} btn-sm btn-pill px-2 px-sm-3 d-flex align-items-center gap-1 gap-sm-2">
+                <a href="{{ route('bills.create') }}" class="btn {{ request()->routeIs('bills.*') ? 'btn-gradient-primary' : 'btn-outline-secondary' }} btn-sm btn-pill px-3 py-1 py-md-2 d-flex align-items-center justify-content-center gap-2 shadow-xs flex-fill flex-md-grow-0" style="font-size: 0.85rem;">
                     <i class="fa-solid fa-users"></i>
                     <span>Buat Patungan</span>
                 </a>
