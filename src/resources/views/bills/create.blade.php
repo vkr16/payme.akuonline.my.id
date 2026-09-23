@@ -7,12 +7,19 @@
     <div class="col-lg-10 col-xl-9">
 
         <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="fw-bold fs-3 text-dark mb-1 d-flex align-items-center gap-2">
-                <i class="fa-solid fa-receipt text-primary"></i>
-                <span>Buat Patungan Baru</span>
-            </h1>
-            <p class="text-muted mb-0">Bagi tagihan pesanan secara adil dan transparan dengan konversi QRIS statis ke dinamis serta pembagian proporsional.</p>
+        <div class="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h1 class="fw-bold fs-3 text-dark mb-1 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-receipt text-primary"></i>
+                    <span>Buat Patungan Baru</span>
+                </h1>
+                <p class="text-muted mb-0">Bagi tagihan pesanan secara adil dan transparan dengan konversi QRIS statis ke dinamis serta pembagian proporsional.</p>
+            </div>
+            <a href="{{ route('invoices.create') }}" class="btn btn-outline-primary btn-sm btn-pill px-3 shadow-xs d-flex align-items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Invoice Maker</span>
+                <span class="badge bg-warning text-dark border border-warning-subtle fw-bold rounded-pill" style="font-size: 0.65rem; padding: 2px 6px;">Beta</span>
+            </a>
         </div>
 
         <!-- PRIVACY & DATA RETENTION CTA BANNER (TOP POSITION WITH P-3 PADDING) -->

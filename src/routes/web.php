@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BillController;
+use App\Http\Controllers\InvoiceController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to /create using clean relative path
@@ -24,4 +25,13 @@ Route::get('/instant-qris', function () {
 Route::get('/qris-instant', function () {
     return redirect('/create?instant=1');
 });
+
+// Invoice Maker routes
+Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+Route::get('/i/{slug}', [InvoiceController::class, 'show'])->name('invoices.show');
+Route::get('/i/{slug}/logo', [InvoiceController::class, 'logoImage'])->name('invoices.logo');
+Route::get('/i/{slug}/qris-image', [InvoiceController::class, 'qrisImage'])->name('invoices.qris-image');
+Route::post('/i/{slug}/status', [InvoiceController::class, 'updateStatus'])->name('invoices.status');
+
 

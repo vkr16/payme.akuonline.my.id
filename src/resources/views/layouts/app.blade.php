@@ -392,6 +392,7 @@
     </style>
 
     @yield('styles')
+    @stack('styles')
 </head>
 <body class="text-dark">
     <!-- Navbar (Glassmorphism Header) -->
@@ -417,8 +418,13 @@
                     <i class="fa-solid fa-mug-hot text-dark"></i>
                     <span class="d-none d-md-inline">Traktir Kopi</span>
                 </button>
-                <a href="{{ route('bills.create') }}" class="btn btn-gradient-primary btn-sm btn-pill px-3 d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-plus"></i>
+                <a href="{{ route('invoices.create') }}" class="btn {{ request()->routeIs('invoices.*') ? 'btn-primary text-white' : 'btn-outline-primary' }} btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-2 shadow-xs position-relative">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    <span>Buat Invoice</span>
+                    <span class="badge bg-warning text-dark border border-warning-subtle fw-bold rounded-pill" style="font-size: 0.65rem; padding: 2px 6px;">Beta</span>
+                </a>
+                <a href="{{ route('bills.create') }}" class="btn {{ request()->routeIs('bills.*') ? 'btn-gradient-primary' : 'btn-outline-secondary' }} btn-sm btn-pill px-3 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-users"></i>
                     <span class="d-none d-sm-inline">Buat Patungan</span>
                 </a>
             </div>
@@ -1603,6 +1609,7 @@
     </script>
 
     @yield('scripts')
+    @stack('scripts')
 </body>
 </html>
 
