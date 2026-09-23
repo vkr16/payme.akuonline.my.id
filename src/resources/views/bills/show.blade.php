@@ -864,10 +864,18 @@
                     </small>
                 </div>
             </div>
-            <div class="modal-footer border-top border-light py-2 px-3 d-flex justify-content-between">
-                <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3" id="btnCopyClaimSummary">
-                    <i class="fa-solid fa-copy me-1"></i> <span id="btnCopyClaimText">Salin Rincian</span>
-                </button>
+            <div class="modal-footer border-top border-light py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-pill px-3" id="btnCopyClaimSummary">
+                        <i class="fa-solid fa-copy me-1"></i> <span id="btnCopyClaimText">Salin Rincian</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success btn-pill px-3" id="btnDownloadReceiptImage" title="Download sebagai Gambar">
+                        <i class="fa-solid fa-image me-1"></i> <span>Gambar</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-pill px-3" id="btnDownloadReceiptPdf" title="Download sebagai PDF">
+                        <i class="fa-solid fa-file-pdf me-1"></i> <span>PDF</span>
+                    </button>
+                </div>
                 <button type="button" class="btn btn-sm btn-secondary btn-pill px-4" data-bs-dismiss="modal">
                     Tutup
                 </button>
@@ -1884,6 +1892,122 @@ document.addEventListener('DOMContentLoaded', function() {
         text += `\n_Ditalangin oleh ${data.host_name} via PayMe_`;
         return text;
     }
+
+    // ── Receipt Download Helpers ────────────────────────────────────────────
+    function getReceiptElement() {
+        return document.getElementById('claimDetailModal').querySelector('.modal-body');
+    }
+
+    function sanitizeFilename(name) {
+        return name.replace(/[^a-zA-Z0-9_\-\u00C0-\u024F]/g, '_');
+    }
+
+    function setDownloadBtnLoading(btn, originalHtml, loadingHtml) {
+        btn.disabled = true;
+        btn.innerHTML = loadingHtml;
+        return function restore() {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        };
+    }
+
+    // Download as Image (PNG)
+    const btnDownloadReceiptImage = document.getElementById('btnDownloadReceiptImage');
+    if (btnDownloadReceiptImage) {
+        btnDownloadReceiptImage.addEventListener('click', async function () {
+            if (!activeClaimData) return;
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            const restore = setDownloadBtnLoading(btn,
+                originalHtml,
+                '<i class="fa-solid fa-spinner fa-spin me-1"></i> Memproses...'
+            );
+
+            try {
+                const el = getReceiptElement();
+                const canvas = await html2canvas(el, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                });
+
+                const link = document.createElement('a');
+                const payerSlug = sanitizeFilename(activeClaimData.payer_name || 'payer');
+                link.download = `nota-${payerSlug}-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Selesai!';
+                btn.classList.replace('btn-outline-success', 'btn-success');
+                setTimeout(() => {
+                    restore();
+                    btn.classList.replace('btn-success', 'btn-outline-success');
+                }, 2000);
+            } catch (err) {
+                console.error('Download image error:', err);
+                alert('Gagal mengunduh gambar. Silakan coba lagi.');
+                restore();
+            }
+        });
+    }
+
+    // Download as PDF
+    const btnDownloadReceiptPdf = document.getElementById('btnDownloadReceiptPdf');
+    if (btnDownloadReceiptPdf) {
+        btnDownloadReceiptPdf.addEventListener('click', async function () {
+            if (!activeClaimData) return;
+            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                alert('Library PDF belum siap. Silakan coba lagi dalam beberapa detik.');
+                return;
+            }
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            const restore = setDownloadBtnLoading(btn,
+                originalHtml,
+                '<i class="fa-solid fa-spinner fa-spin me-1"></i> Memproses...'
+            );
+
+            try {
+                const el = getReceiptElement();
+                const canvas = await html2canvas(el, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+
+                // A4 width in mm = 210, keep aspect ratio
+                const pdfWidth = 210;
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                const pdf = new jsPDF({
+                    orientation: pdfHeight > pdfWidth ? 'portrait' : 'landscape',
+                    unit: 'mm',
+                    format: [pdfWidth, pdfHeight],
+                });
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+                const payerSlug = sanitizeFilename(activeClaimData.payer_name || 'payer');
+                pdf.save(`nota-${payerSlug}-${Date.now()}.pdf`);
+
+                btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Selesai!';
+                btn.classList.replace('btn-outline-danger', 'btn-danger');
+                setTimeout(() => {
+                    restore();
+                    btn.classList.replace('btn-danger', 'btn-outline-danger');
+                }, 2000);
+            } catch (err) {
+                console.error('Download PDF error:', err);
+                alert('Gagal mengunduh PDF. Silakan coba lagi.');
+                restore();
+            }
+        });
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     function escapeHtml(str) {
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
