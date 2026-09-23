@@ -194,7 +194,7 @@ class InvoiceController extends Controller
         // Store edit token in session
         session(['invoice_token_' . $invoice->slug => $invoice->edit_token]);
 
-        return redirect()->route('invoices.show', $invoice->slug)
+        return redirect('/i/' . $invoice->slug)
             ->with('success', 'Invoice #' . $invoice->invoice_number . ' berhasil dibuat!')
             ->with('new_passcode', $invoice->passcode)
             ->with('created_token', $invoice->edit_token);

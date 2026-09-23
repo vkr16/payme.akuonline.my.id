@@ -113,7 +113,7 @@ class Invoice extends Model
 
     public function getWhatsappShareUrlAttribute(): string
     {
-        $invoiceUrl = route('invoices.show', $this->slug);
+        $invoiceUrl = url('/i/' . $this->slug);
         $totalFormatted = $this->formatted_total_amount;
         $dueDateText = $this->due_date ? ' jatuh tempo pada ' . $this->due_date->translatedFormat('d F Y') : '';
 
