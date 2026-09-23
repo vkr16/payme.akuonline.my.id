@@ -9,11 +9,12 @@
         <!-- ACTION TOOLBAR (Hidden when printed) -->
         <div class="d-print-none mb-4" id="invoiceActionsBar">
             <div class="card glass-card shadow-sm p-3">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-2">
+                <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
+                    <!-- Baris 1 di Mobile: Tombol Buat Invoice & Status Badge -->
+                    <div class="d-flex align-items-center justify-content-between justify-content-md-start gap-2">
                         <a href="{{ route('invoices.create') }}" class="btn btn-light btn-sm btn-pill px-3 shadow-xs d-flex align-items-center gap-2">
                             <i class="fa-solid fa-plus"></i>
-                            <span>Buat Invoice Baru</span>
+                            <span>Buat Invoice</span>
                             <span class="badge bg-warning text-dark border border-warning-subtle fw-bold rounded-pill" style="font-size: 0.65rem; padding: 2px 6px;">Beta</span>
                         </a>
                         <span class="badge {{ $invoice->status_badge_class }} px-3 py-2 fs-6 rounded-pill" id="badgeInvoiceStatus">
@@ -21,24 +22,25 @@
                         </span>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Baris 2 di Mobile: Action Buttons Terdistribusi Rapi -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 justify-content-between justify-content-md-end">
                         <!-- Print / PDF -->
-                        <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 shadow-xs" onclick="window.print()">
-                            <i class="fa-solid fa-print me-1"></i> Cetak / Simpan PDF
+                        <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-2 px-sm-3 shadow-xs flex-fill flex-md-grow-0" onclick="window.print()">
+                            <i class="fa-solid fa-print me-1"></i> <span class="d-inline">Cetak PDF</span>
                         </button>
 
                         <!-- Share WhatsApp -->
-                        <a href="{{ $invoice->whatsapp_share_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm btn-pill px-3 shadow-xs text-white">
-                            <i class="fa-brands fa-whatsapp me-1"></i> Kirim ke WA Klien
+                        <a href="{{ $invoice->whatsapp_share_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm btn-pill px-2 px-sm-3 shadow-xs text-white flex-fill flex-md-grow-0">
+                            <i class="fa-brands fa-whatsapp me-1"></i> <span class="d-inline">Kirim WA</span>
                         </a>
 
                         <!-- Copy Link -->
-                        <button type="button" class="btn btn-outline-secondary btn-sm btn-pill px-3 shadow-xs" id="btnCopyLink">
-                            <i class="fa-solid fa-link me-1"></i> <span id="copyLinkText">Salin Tautan</span>
+                        <button type="button" class="btn btn-outline-secondary btn-sm btn-pill px-2 px-sm-3 shadow-xs flex-fill flex-md-grow-0" id="btnCopyLink">
+                            <i class="fa-solid fa-link me-1"></i> <span id="copyLinkText">Salin Link</span>
                         </button>
 
                         <!-- Change Status Button (Verified by Passcode) -->
-                        <button type="button" class="btn btn-gradient-primary btn-sm btn-pill px-3 shadow-xs d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#changeStatusModal">
+                        <button type="button" class="btn btn-gradient-primary btn-sm btn-pill px-3 shadow-xs d-flex align-items-center justify-content-center gap-1 flex-fill flex-md-grow-0" data-bs-toggle="modal" data-bs-target="#changeStatusModal">
                             <i class="fa-solid fa-key me-1"></i>
                             <span>Ubah Status</span>
                         </button>

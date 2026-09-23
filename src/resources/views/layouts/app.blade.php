@@ -405,27 +405,27 @@
                     <span class="text-muted fw-medium" style="font-size: 0.68rem; margin-top: 2px;">by AkuOnline</span>
                 </div>
             </a>
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#instantQrisModal">
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 ms-auto">
+                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-2 px-sm-3 fw-semibold d-flex align-items-center gap-1 gap-sm-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#instantQrisModal">
                     <i class="fa-solid fa-bolt text-warning"></i>
                     <span>QR Instant</span>
                 </button>
-                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
+                <button type="button" class="btn btn-outline-primary btn-sm btn-pill px-2 px-sm-3 fw-semibold d-flex align-items-center gap-1 gap-sm-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#privacyPolicyModal">
                     <i class="fa-solid fa-shield-halved text-primary"></i>
                     <span class="d-none d-sm-inline">Privasi & Retensi Data</span>
                 </button>
-                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-3 shadow-xs d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#coffeeModal">
+                <button type="button" class="btn btn-warning btn-sm fw-bold btn-pill px-2 px-sm-3 shadow-xs d-flex align-items-center gap-1 gap-sm-2" data-bs-toggle="modal" data-bs-target="#coffeeModal">
                     <i class="fa-solid fa-mug-hot text-dark"></i>
                     <span class="d-none d-md-inline">Traktir Kopi</span>
                 </button>
-                <a href="{{ route('invoices.create') }}" class="btn {{ request()->routeIs('invoices.*') ? 'btn-primary text-white' : 'btn-outline-primary' }} btn-sm btn-pill px-3 fw-semibold d-flex align-items-center gap-2 shadow-xs position-relative">
+                <a href="{{ route('invoices.create') }}" class="btn {{ request()->routeIs('invoices.*') ? 'btn-primary text-white' : 'btn-outline-primary' }} btn-sm btn-pill px-2 px-sm-3 fw-semibold d-flex align-items-center gap-1 gap-sm-2 shadow-xs position-relative">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                     <span>Buat Invoice</span>
                     <span class="badge bg-warning text-dark border border-warning-subtle fw-bold rounded-pill" style="font-size: 0.65rem; padding: 2px 6px;">Beta</span>
                 </a>
-                <a href="{{ route('bills.create') }}" class="btn {{ request()->routeIs('bills.*') ? 'btn-gradient-primary' : 'btn-outline-secondary' }} btn-sm btn-pill px-3 d-flex align-items-center gap-2">
+                <a href="{{ route('bills.create') }}" class="btn {{ request()->routeIs('bills.*') ? 'btn-gradient-primary' : 'btn-outline-secondary' }} btn-sm btn-pill px-2 px-sm-3 d-flex align-items-center gap-1 gap-sm-2">
                     <i class="fa-solid fa-users"></i>
-                    <span class="d-none d-sm-inline">Buat Patungan</span>
+                    <span>Buat Patungan</span>
                 </a>
             </div>
         </div>
